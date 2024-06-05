@@ -4,21 +4,6 @@ on:
   push:
     branches: [ master ]
 
-concurrency:
-  group: ${{ github.ref }}-${{ github.workflow }}
-  cancel-in-progress: true
-
-env:
-  REGISTRY_IMAGE: 
-
-
-name: Docker Image
-on: 
-  workflow_dispatch:
-  # push:
-  #   branches: [ master ]
-  #   tags:
-  #     - '**'
 
 concurrency:
   group: ${{ github.ref }}-${{ github.workflow }}
