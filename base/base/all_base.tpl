@@ -1,52 +1,16 @@
 {% if request.target == "clash" or request.target == "clashr" %}
+
 port: {{ default(global.clash.http_port, "7890") }}
 socks-port: {{ default(global.clash.socks_port, "7891") }}
 allow-lan: {{ default(global.clash.allow_lan, "true") }}
-mode: rule
+mode: Rule
 log-level: {{ default(global.clash.log_level, "info") }}
 external-controller: :9090
-unified-delay: true
-tcp-concurrent: true
-find-process-mode: strict
-global-client-fingerprint: chrome
-#  TCP keep alive interval
-keep-alive-interval: 15
-#自定义 geodata url
-geodata-mode: true
-geox-url:
-  geoip: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat"
-  geosite: "https://cdn.jsdelivr.net/gh/Jacky-Bruse/v2ray-rules-dat@release/geosite.dat"
-  mmdb: "https://cdn.jsdelivr.net/gh/Hackl0us/GeoIP2-CN@release/Country.mmdb"
-geo-auto-update: true  # 是否自动更新 geodata
-geo-update-interval: 48 # 更新间隔，单位：小时
-sniffer:
-  enable: true
-  parse-pure-ip: true
-  sniff: {HTTP: {ports: [80, 8080-8880]}, TLS: {ports: [443, 8443]}, QUIC: {ports: [443, 8443]}}
-  skip-domain: ['Mijia Cloud']
+{% if default(request.clash.dns, "") == "1" %}
 dns:
   enable: true
-  prefer-h3: true
-  ipv6: false
-  listen: 0.0.0.0:7874
-  fake-ip-range: 198.18.0.1/16
-  enhanced-mode: fake-ip
-  fake-ip-filter: ['+.*']
-  nameserver:
-    - 'https://1.1.1.1/dns-query#h3=true'
-    - 'tls://8.8.4.4:853#DNS'
-    - https://dns.adguard.com/dns-query
-    - 'https://223.5.5.5/dns-query#h3=true'
-  nameserver-policy:
-    "geosite:cn,private,geolocation-cn,microsoft@cn,apple-cn,google-cn,category-games@cn":
-      - 'https://223.5.5.5/dns-query#h3=true'
-      - 'https://1.12.12.12/dns-query'
-      - 'https://doh.pub/dns-query'
-    "geosite:geolocation-!cn,gfw,youtube": 
-      - 'https://1.1.1.1/dns-query#DNS&h3=true'
-      - 'tls://8.8.4.4:853#DNS'
-      - 'https://8.8.8.8/dns-query#DNS'
-
+  listen: :1053
+{% endif %}
 {% if local.clash.new_field_name == "true" %}
 proxies: ~
 proxy-groups: ~
@@ -56,8 +20,8 @@ Proxy: ~
 Proxy Group: ~
 Rule: ~
 {% endif %}
-{% endif %}
 
+{% endif %}
 {% if request.target == "surge" %}
 
 [General]
