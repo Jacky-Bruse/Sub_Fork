@@ -50,16 +50,7 @@ tun:
     - "tcp://any:53"
   auto-route: true
   auto-detect-interface: true
-  exclude-package:
-  - com.tencent.mm
-  - com.tencent.wework
-  - cn.gov.tax.its
-  - com.eg.android.AlipayGphone
-  - com.android.captiveportallogin
-  - com.tencent.wework
-  - com.MobileTicket
-  - com.smzdm.client.android
-  - com.jingdong.app.mall
+
 
 dns:
   enable: true
