@@ -44,7 +44,6 @@ sniffer:
 tun:
   enable: true  # enable 'true'
   stack: mixed  # or 'gvisor'
-  auto-route: true
   dns-hijack:
     - "any:53"
     - "tcp://any:53"
