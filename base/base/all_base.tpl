@@ -52,7 +52,7 @@ dns:
   # 只能使用纯 IP 地址，可使用加密 DNS
   default-nameserver:
     - https://223.5.5.5/dns-query
-    - https://dns.cloudflare.com/dns-query
+    - https://1.1.1.1/dns-query
     - tls://1.12.12.12:853
   enhanced-mode: fake-ip # or redir-host
 
