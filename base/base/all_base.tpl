@@ -50,20 +50,6 @@ tun:
     - "tcp://any:53"
   auto-route: true
   auto-detect-interface: true
-  include-uid:
-  - 0
-  include-uid-range:
-  - 1000:9999
-  exclude-uid:
-  - 1000
-  exclude-uid-range:
-  - 1000:9999
-  include-android-user:
-  - 0
-  - 10
-  - 999
-  include-package:
-  - com.android.chrome
   exclude-package:
   - com.tencent.mm
   - com.tencent.wework
