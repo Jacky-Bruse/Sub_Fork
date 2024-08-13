@@ -1,16 +1,17 @@
 name: Publish Docker Image
 on:
   push:
-    branches: [ main ]
-    tags:
-      - '**'
+  workflow_dispatch:
+  pull_request:
+    branches: [master]
+    types: [closed]
 
 concurrency:
   group: ${{ github.ref }}-${{ github.workflow }}
   cancel-in-progress: true
 
 env:
-  REGISTRY_IMAGE: leejacky/subbehind
+  REGISTRY_IMAGE: leejacky/subtun
 jobs:
   build:
     strategy:
@@ -26,7 +27,6 @@ jobs:
         run: |
           platform=${{ matrix.platform }}
           echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV    
-
       - name: Checkout base
         uses: actions/checkout@v4
         with:
@@ -45,7 +45,6 @@ jobs:
           tags: |
             type=semver,pattern={{version}}
             type=raw,value=latest,enable={{is_default_branch}}
-
       - name: Docker login
         uses: docker/login-action@v3
         with:
@@ -74,7 +73,6 @@ jobs:
           mkdir -p /tmp/digests
           digest="${{ steps.build.outputs.digest }}"
           touch "/tmp/digests/${digest#sha256:}"
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -106,7 +104,6 @@ jobs:
           tags: |
             type=semver,pattern={{version}}
             type=raw,value=latest,enable={{is_default_branch}}
-
       - name: Docker login
         uses: docker/login-action@v3
         with:
@@ -118,7 +115,6 @@ jobs:
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)      
-
       - name: Inspect image
         run: |
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
