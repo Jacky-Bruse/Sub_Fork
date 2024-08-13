@@ -44,11 +44,36 @@ sniffer:
 tun:
   enable: true  # enable 'true'
   stack: mixed  # or 'gvisor'
+  auto-route: true
   dns-hijack:
     - "any:53"
     - "tcp://any:53"
   auto-route: true
   auto-detect-interface: true
+  include-uid:
+  - 0
+  include-uid-range:
+  - 1000:9999
+  exclude-uid:
+  - 1000
+  exclude-uid-range:
+  - 1000:9999
+  include-android-user:
+  - 0
+  - 10
+  - 999
+  include-package:
+  - com.android.chrome
+  exclude-package:
+  - com.tencent.mm
+  - com.tencent.wework
+  - cn.gov.tax.its
+  - com.eg.android.AlipayGphone
+  - com.android.captiveportallogin
+  - com.tencent.wework
+  - com.MobileTicket
+  - com.smzdm.client.android
+  - com.jingdong.app.mall
 
 dns:
   enable: true
