@@ -294,10 +294,20 @@ dns:
     - www.torrent.eu.org
     - z.mercax.com
     - tracker.openwebtorrent.com
+    geoip: true
+    geoip-code: CN
+    geosite:
+      - gfw
+    ipcidr:
+      - 240.0.0.0/4
+    domain:
+      - '+.google.com'
+      - '+.facebook.com'
+      - '+.youtube.com'
   nameserver:
     - https://doh.pub/dns-query
     - https://dns.alidns.com/dns-query
-
+    - https://1.1.1.1/dns-query # DNS over HTTPS
 
 
 {% if local.clash.new_field_name == "true" %}
