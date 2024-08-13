@@ -40,17 +40,6 @@ sniffer:
   skip-domain: # 需要跳过嗅探的域名,主要解决部分站点sni字段非域名,导致嗅探结果异常的问题,如米家设备
     - "Mijia Cloud"
 
-# tun 模式
-tun:
-  enable: true  # enable 'true'
-  stack: mixed  # or 'gvisor'
-  dns-hijack:
-    - "any:53"
-    - "tcp://any:53"
-  auto-route: true
-  auto-detect-interface: true
-
-
 dns:
   enable: true
   prefer-h3: true
