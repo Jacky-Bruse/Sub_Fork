@@ -40,55 +40,15 @@ sniffer:
   skip-domain: # 需要跳过嗅探的域名,主要解决部分站点sni字段非域名,导致嗅探结果异常的问题,如米家设备
     - "Mijia Cloud"
 
+# tun 模式
 tun:
-  enable: true
-  stack: system
-  auto-route: true
-  auto-redirect: true
-  auto-detect-interface: true
+  enable: true  # enable 'true'
+  stack: mixed  # or 'gvisor'
   dns-hijack:
-    - any:53
-    - tcp://any:53
-  device: utun0
-  mtu: 9000
-  strict-route: true
-  gso: true
-  gso-max-size: 65536
-  udp-timeout: 300
-  iproute2-table-index: 2022
-  iproute2-rule-index: 9000
-  endpoint-independent-nat: false
-  route-address-set:
-    - ruleset-1
-  route-exclude-address-set:
-    - ruleset-2
-  route-address:
-    - 0.0.0.0/1
-    - 128.0.0.0/1
-    - "::/1"
-    - "8000::/1"
-  route-exclude-address:
-  - 192.168.0.0/16
-  - fc00::/7
-  include-interface:
-  - eth0
-  exclude-interface:
-  - eth1
-  include-uid:
-  - 0
-  include-uid-range:
-  - 1000:9999
-  exclude-uid:
-  - 1000
-  exclude-uid-range:
-  - 1000:9999
-  include-android-user:
-  - 0
-  - 10
-  include-package:
-  - com.android.chrome
-  exclude-package:
-  - com.android.captiveportallogin
+    - "any:53"
+    - "tcp://any:53"
+  auto-route: true
+  auto-detect-interface: true
 
 dns:
   enable: true
