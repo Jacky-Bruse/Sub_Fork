@@ -51,11 +51,9 @@ dns:
   # 用于解析 nameserver，fallback 以及其他 DNS 服务器配置的，DNS 服务域名
   # 只能使用纯 IP 地址，可使用加密 DNS
   default-nameserver:
-    - 114.114.114.114
-    - 8.8.8.8
+    - https://223.5.5.5/dns-query
+    - https://dns.cloudflare.com/dns-query
     - tls://1.12.12.12:853
-    - tls://223.5.5.5:853
-    - system # append DNS server from system configuration. If not found, it would print an error log and skip.
   enhanced-mode: fake-ip # or redir-host
 
   fake-ip-range: 198.18.0.1/16 # fake-ip 池设置
