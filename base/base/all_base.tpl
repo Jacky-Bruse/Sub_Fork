@@ -51,9 +51,19 @@ dns:
   # 用于解析 nameserver，fallback 以及其他 DNS 服务器配置的，DNS 服务域名
   # 只能使用纯 IP 地址，可使用加密 DNS
   default-nameserver:
+    - https://1.12.12.12/dns-query
     - https://223.5.5.5/dns-query
-    - https://1.1.1.1/dns-query
-    - tls://1.12.12.12:853
+  nameserver:
+    - tls://1.1.1.1:853
+    - tls://8.8.8.8:853
+  fallback:
+    - tls://1.1.1.1:853
+    - tls://8.8.8.8:853
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    ipcidr:
+      - 240.0.0.0/4
   enhanced-mode: fake-ip # or redir-host
 
   fake-ip-range: 198.18.0.1/16 # fake-ip 池设置
@@ -144,10 +154,6 @@ dns:
 
     ## Bilibili CDN
     - '*.mcdn.bilivideo.cn'
-  nameserver:
-    - https://doh.pub/dns-query
-    - https://dns.alidns.com/dns-query
-    - https://1.1.1.1/dns-query 
 
 
 {% if local.clash.new_field_name == "true" %}
