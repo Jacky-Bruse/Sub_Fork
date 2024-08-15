@@ -67,7 +67,7 @@ dns:
   fake-ip-range: 198.18.0.1/16 # fake-ip 池设置
   fake-ip-filter:
     # fakeip-filter 为 geosite 中名为 fakeip-filter 的分类（需要自行保证该分类存在）
-    - geosite:fakeip-filter
+    - geosite:fake-ip-filter
 
   nameserver-policy:
     "geosite:private,cn,geolocation-cn":
