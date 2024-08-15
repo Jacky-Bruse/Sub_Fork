@@ -56,9 +56,9 @@ dns:
   nameserver:
     - tls://1.1.1.1:853
     - tls://8.8.8.8:853
-  fallback:
-    - tls://1.1.1.1:853
-    - tls://8.8.8.8:853
+  nameserver:
+    - https://dns.cloudflare.com/dns-query
+    - https://dns.google/dns-query
   fallback-filter:
     geoip: true
     geoip-code: CN
@@ -70,6 +70,11 @@ dns:
   fake-ip-filter:
     # fakeip-filter 为 geosite 中名为 fakeip-filter 的分类（需要自行保证该分类存在）
     - geosite:fakeip-filter
+  nameserver-policy:
+    "geosite:private,cn,geolocation-cn":
+      - https://1.12.12.12/dns-query
+      - https://223.5.5.5/dns-query
+    "geosite:category-ads-all": rcode://success # 新添加的规则
 
 
 {% if local.clash.new_field_name == "true" %}
