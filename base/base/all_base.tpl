@@ -54,9 +54,6 @@ dns:
     - https://1.12.12.12/dns-query
     - https://223.5.5.5/dns-query
   nameserver:
-    - tls://1.1.1.1:853
-    - tls://8.8.8.8:853
-  nameserver:
     - https://dns.cloudflare.com/dns-query
     - https://dns.google/dns-query
 
