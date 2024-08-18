@@ -68,6 +68,7 @@ dns:
   fake-ip-filter:
     # fakeip-filter 为 geosite 中名为 fakeip-filter 的分类（需要自行保证该分类存在）
     - geosite:fake-ip-filter
+    - geosite:cn
 
   nameserver-policy:
     "geosite:private,cn,geolocation-cn":
