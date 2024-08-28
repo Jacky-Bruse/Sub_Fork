@@ -19,6 +19,12 @@ geox-url:
   mmdb: "https://cdn.jsdelivr.net/gh/Hackl0us/GeoIP2-CN@release/Country.mmdb"
 geo-auto-update: true  # 是否自动更新 geodata
 geo-update-interval: 48 # 更新间隔，单位：小时
+
+profile: # 存储 select 选择记录
+  store-selected: false
+
+  # 持久化 fake-ip
+  store-fake-ip: true
 #################### 域名嗅探 ####################
 sniffer:
   enable: true # 是否启用,可选 true/false
@@ -68,6 +74,7 @@ dns:
   fake-ip-range: 198.18.0.1/16 # fake-ip 池设置
   fake-ip-filter:
     # fakeip-filter 为 geosite 中名为 fakeip-filter 的分类（需要自行保证该分类存在）
+    - '*.lan'
     - geosite:fake-ip-filter
     - geosite:cn
 
