@@ -47,8 +47,8 @@ dns:
   enable: true # 关闭将使用系统 DNS
   prefer-h3: true # 是否开启 DoH 支持 HTTP/3，将并发尝试
   listen: 0.0.0.0:7874 # 开启 DNS 服务器监听
-  # ipv6: false # false 将返回 AAAA 的空结果
-  # ipv6-timeout: 300 # 单位：ms，内部双栈并发时，向上游查询 AAAA 时，等待 AAAA 的时间，默认 100ms
+  ipv6: true # false 将返回 AAAA 的空结果
+  ipv6-timeout: 300 # 单位：ms，内部双栈并发时，向上游查询 AAAA 时，等待 AAAA 的时间，默认 100ms
   # 用于解析 nameserver，fallback 以及其他 DNS 服务器配置的，DNS 服务域名
   # 只能使用纯 IP 地址，可使用加密 DNS
   default-nameserver:
