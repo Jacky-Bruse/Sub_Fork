@@ -1582,7 +1582,7 @@ void explodeStdVless(std::string vless, Proxy &node) {
         remarks = urlDecode(vless.substr(pos + 1));
         vless.erase(pos);
     }
-    const std::string stdvless_matcher = R"(^([\da-f]{4}(?:[\da-f]{4}-){4}[\da-f]{12})@\[?([\d\-a-zA-Z:.]+)\]?:(\d+)(?:\/?\?(.*))?$)";
+    const std::string stdvless_matcher = R"(^([\da-fA-F]{4}(?:[\da-fA-F]{4}-){4}[\da-fA-F]{12})@\[?([\d\-a-zA-Z:.]+)\]?:(\d+)(?:\/?\?(.*))?$)";
     if (regGetMatch(vless, stdvless_matcher, 5, 0, &id, &add, &port, &addition))
         return;
 
