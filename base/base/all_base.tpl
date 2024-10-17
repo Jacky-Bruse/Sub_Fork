@@ -1,11 +1,11 @@
 {% if request.target == "clash" or request.target == "clashr" %}
-port: {{ default(global.clash.http_port, "7890") }}
+port: {{ default(global.clash.http_port, "9890") }}
 socks-port: {{ default(global.clash.socks_port, "7891") }}
 allow-lan: {{ default(global.clash.allow_lan, "true") }}
 mode: rule
 log-level: {{ default(global.clash.log_level, "info") }}
-ipv6: true # 开启 IPv6 总开关，关闭阻断所有 IPv6 链接和屏蔽 DNS 请求 AAAA 记录
 external-controller: :9090
+secret: 'HJKD27LS1tkL!'
 find-process-mode: strict # 进程模式 off / strict / always
 global-client-fingerprint: chrome
 tcp-concurrent: true # TCP 并发 如果域名解析结果对应多个IP,并发请求所有IP,选择握手最快的IP进行通讯
@@ -19,10 +19,9 @@ geox-url:
   mmdb: "https://cdn.jsdelivr.net/gh/Hackl0us/GeoIP2-CN@release/Country.mmdb"
 geo-auto-update: true  # 是否自动更新 geodata
 geo-update-interval: 48 # 更新间隔，单位：小时
-
+ipv6: true # 开启 IPv6 总开关，关闭阻断所有 IPv6 链接和屏蔽 DNS 请求 AAAA 记录
 profile: # 存储 select 选择记录
-  store-selected: false
-
+  store-selected: true
   # 持久化 fake-ip
   store-fake-ip: true
 #################### 域名嗅探 ####################
@@ -47,46 +46,34 @@ sniffer:
   skip-domain: # 需要跳过嗅探的域名,主要解决部分站点sni字段非域名,导致嗅探结果异常的问题,如米家设备
     - "Mijia Cloud"
 
-# DNS 配置
 dns:
-  cache-algorithm: arc
-  enable: true # 关闭将使用系统 DNS
-  prefer-h3: true # 是否开启 DoH 支持 HTTP/3，将并发尝试
-  listen: 0.0.0.0:7874 # 开启 DNS 服务器监听
-  ipv6: true # false 将返回 AAAA 的空结果
-  ipv6-timeout: 300 # 单位：ms，内部双栈并发时，向上游查询 AAAA 时，等待 AAAA 的时间，默认 100ms
-  # 用于解析 nameserver，fallback 以及其他 DNS 服务器配置的，DNS 服务域名
-  # 只能使用纯 IP 地址，可使用加密 DNS
+  enable: true
+  listen: :7874
+  ipv6: true
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.0/15
+  fake-ip-filter:
+    - "*"
+    - "+.*"
+    - "+.lan"
+    - "+.local"
+  respect-rules: true
   default-nameserver:
+    - tls://223.5.5.5:853
+    - tls://1.12.12.12:853
+  proxy-server-nameserver:
     - https://223.5.5.5/dns-query
     - https://1.12.12.12/dns-query
   nameserver:
     - https://dns.cloudflare.com/dns-query
     - https://dns.google/dns-query
-
-  fallback-filter:
-    geoip: true
-    geoip-code: CN
-    ipcidr:
-      - 240.0.0.0/4
-  enhanced-mode: fake-ip # or redir-host
-
-  fake-ip-range: 198.18.0.1/16 # fake-ip 池设置
-  fake-ip-filter:
-    # fakeip-filter 为 geosite 中名为 fakeip-filter 的分类（需要自行保证该分类存在）
-    - '*.lan'
-    - geosite:fake-ip-filter
-    - geosite:cn
-  # 配置fake-ip-filter的匹配模式，默认为blacklist，即如果匹配成功不返回fake-ip
-  # 可设置为whitelist，即只有匹配成功才返回fake-ip
-  fake-ip-filter-mode: blacklist
-
-
   nameserver-policy:
     "geosite:private,cn,geolocation-cn":
-      - https://dns.alidns.com/dns-query#h3=true
       - https://1.12.12.12/dns-query
+      - https://223.5.5.5/dns-query
     "geosite:category-ads-all": rcode://success # 新添加的规则
+
+
 
 
 {% if local.clash.new_field_name == "true" %}
