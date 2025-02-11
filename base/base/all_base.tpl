@@ -58,9 +58,9 @@ dns:
     - "+.lan"
     - "+.local"
   respect-rules: true
+
   default-nameserver:
-    - tls://223.5.5.5:853
-    - tls://1.12.12.12:853
+    - 192.168.1.3:5225
   proxy-server-nameserver:
     - https://223.5.5.5/dns-query
     - https://1.12.12.12/dns-query
