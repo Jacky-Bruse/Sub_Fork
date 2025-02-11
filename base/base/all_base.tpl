@@ -26,7 +26,7 @@ profile: # 存储 select 选择记录
   store-fake-ip: true
 #################### 域名嗅探 ####################
 sniffer:
-  enable: false # 是否启用,可选 true/false
+  enable: true # 是否启用,可选 true/false
   force-dns-mapping: true # 对 redir-host 类型识别的流量进行强制嗅探
   parse-pure-ip: true # 对所有未获取到域名的流量进行强制嗅探
   override-destination: true # 是否使用嗅探结果作为实际访问,默认为 true
@@ -47,7 +47,7 @@ sniffer:
     - "Mijia Cloud"
 
 dns:
-  enable: false
+  enable: true
   listen: :7874
   ipv6: true
   enhanced-mode: fake-ip
@@ -57,15 +57,15 @@ dns:
     - "+.*"
     - "+.lan"
     - "+.local"
-  respect-rules: true
+  respect-rules: false
   default-nameserver:
     - 192.168.1.3:5225
   proxy-server-nameserver:
     - https://223.5.5.5/dns-query
     - https://1.12.12.12/dns-query
   nameserver:
-    - https://dns.cloudflare.com/dns-query
-    - https://dns.google/dns-query
+    - https://223.5.5.5/dns-query
+    - https://1.12.12.12/dns-query
   nameserver-policy:
     "geosite:private,cn,geolocation-cn":
       - https://1.12.12.12/dns-query
