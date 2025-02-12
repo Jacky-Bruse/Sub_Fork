@@ -20,57 +20,16 @@ geox-url:
 geo-auto-update: true  # 是否自动更新 geodata
 geo-update-interval: 48 # 更新间隔，单位：小时
 ipv6: true # 开启 IPv6 总开关，关闭阻断所有 IPv6 链接和屏蔽 DNS 请求 AAAA 记录
-profile: # 存储 select 选择记录
-  store-selected: true
-  # 持久化 fake-ip
-  store-fake-ip: true
-#################### 域名嗅探 ####################
-sniffer:
-  enable: true # 是否启用,可选 true/false
-  force-dns-mapping: true # 对 redir-host 类型识别的流量进行强制嗅探
-  parse-pure-ip: true # 对所有未获取到域名的流量进行强制嗅探
-  override-destination: true # 是否使用嗅探结果作为实际访问,默认为 true
-  sniff:
-    QUIC:
-      ports: [443, 8443]
-    TLS: # TLS 默认如果不配置 ports 默认嗅探 443
-      ports: [443, 8443]
-    HTTP:
-      ports: [80, 8080-8880]
-      override-destination: true # 可覆盖 sniffer.override-destination
-  force-domain:
-    - "+.v2ex.com"
-    - "+.chatgpt.com"
-    - "chat.openai.com"
-    - "+.openai.com" # 包含所有openai.com的子域名
-  skip-domain: # 需要跳过嗅探的域名,主要解决部分站点sni字段非域名,导致嗅探结果异常的问题,如米家设备
-    - "Mijia Cloud"
-
 dns:
-  enable: true
-  listen: :7874
-  ipv6: true
-  enhanced-mode: fake-ip
-  fake-ip-range: 198.18.0.0/15
-  fake-ip-filter:
-    - "*"
-    - "+.*"
-    - "+.lan"
-    - "+.local"
-  respect-rules: false
+  enable: false
+  listen: 0.0.0.0:53
   default-nameserver:
-    - 192.168.1.3:5225
-  proxy-server-nameserver:
-    - https://223.5.5.5/dns-query
-    - https://1.12.12.12/dns-query
-  nameserver:
-    - https://223.5.5.5/dns-query
-    - https://1.12.12.12/dns-query
-  nameserver-policy:
-    "geosite:private,cn,geolocation-cn":
-      - https://1.12.12.12/dns-query
-      - https://223.5.5.5/dns-query
-    "geosite:category-ads-all": rcode://success # 新添加的规则
+    - 223.5.5.5
+    - 119.29.29.29
+  enhanced-mode: fake-ip
+  ipv6: false
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter: ['geosite:fakeip-filter']
 
 
 
