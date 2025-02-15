@@ -10,15 +10,6 @@ find-process-mode: strict # 进程模式 off / strict / always
 global-client-fingerprint: chrome
 tcp-concurrent: true # TCP 并发 如果域名解析结果对应多个IP,并发请求所有IP,选择握手最快的IP进行通讯
 keep-alive-interval: 30 # TCP Keep Alive 间隔,单位分钟 | 控制 Clash 发出 TCP Keep Alive 包的间隔,减少移动设备耗电问题的临时措施
-#自定义 geodata url
-geodata-mode: false # GEOIP 数据模式,更改 geoip 使用文件,mmdb 或者 dat,可选,true 为 dat
-geodata-loader: memconservative # GEO 文件加载模式 standard / memconservative
-geox-url:
-  geoip: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat"
-  geosite: "https://cdn.jsdelivr.net/gh/Jacky-Bruse/v2ray-rules-dat@release/geosite.dat"
-  mmdb: "https://cdn.jsdelivr.net/gh/Hackl0us/GeoIP2-CN@release/Country.mmdb"
-geo-auto-update: true  # 是否自动更新 geodata
-geo-update-interval: 48 # 更新间隔，单位：小时
 ipv6: true # 开启 IPv6 总开关，关闭阻断所有 IPv6 链接和屏蔽 DNS 请求 AAAA 记录
 dns:
   enable: false
