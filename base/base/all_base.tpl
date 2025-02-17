@@ -2,7 +2,7 @@
 port: {{ default(global.clash.http_port, "9890") }}
 socks-port: {{ default(global.clash.socks_port, "7891") }}
 allow-lan: {{ default(global.clash.allow_lan, "true") }}
-mode: rules
+mode: rule
 log-level: {{ default(global.clash.log_level, "info") }}
 external-controller: :9090
 secret: 'HJKD27LS1tkL!'
