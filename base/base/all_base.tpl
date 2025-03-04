@@ -38,12 +38,22 @@ dns:
   nameserver:
     - 223.5.5.5
     - 119.29.29.29
-    - 114.114.114.114
-  fallback: []
+  fallback:
+    - https://dns.google/dns-query
+    - https://cloudflare-dns.com/dns-query
+    - tls://1.1.1.1:853
   fallback-filter:
-    geoip: false
-    ipcidr: []
-    domain: []
+    geoip: true
+    geoip-code: CN
+    ipcidr:
+      - 240.0.0.0/4
+      - 0.0.0.0/32
+    domain:
+      - '+.google.com'
+      - '+.facebook.com'
+      - '+.youtube.com'
+      - '+.github.com'
+      - '+.twitter.com'
 
 {% if local.clash.new_field_name == "true" %}
 proxies: ~
