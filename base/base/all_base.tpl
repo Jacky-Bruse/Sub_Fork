@@ -12,15 +12,38 @@ global-client-fingerprint: chrome
 #keep-alive-interval: 30 # TCP Keep Alive 间隔,单位分钟 | 控制 Clash 发出 TCP Keep Alive 包的间隔,减少移动设备耗电问题的临时措施
 ipv6: true # 开启 IPv6 总开关，关闭阻断所有 IPv6 链接和屏蔽 DNS 请求 AAAA 记录
 dns:
-  enable: false
+  enable: true
   listen: 0.0.0.0:53
+  ipv6: true
+  enhanced-mode: fake-ip # 使用 fake-ip 模式
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter:
+    - "*.lan"
+    - "*.local"
+    - localhost.ptlogin2.qq.com
+    - '+.srv.nintendo.net'
+    - '+.stun.playstation.net'
+    - '+.msftconnecttest.com'
+    - '+.msftncsi.com'
+    - '+.xboxlive.com'
+    - 'msftconnecttest.com'
+    - 'xbox.*.microsoft.com'
+    - '*.battlenet.com.cn'
+    - '*.battlenet.com'
+    - '*.blzstatic.cn'
+    - '*.battle.net'
   default-nameserver:
     - 223.5.5.5
     - 119.29.29.29
-  enhanced-mode: fake-ip
-  ipv6: false
-  fake-ip-range: 198.18.0.1/16
-  fake-ip-filter: ['geosite:fakeip-filter']
+  nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+    - 114.114.114.114
+  fallback: []
+  fallback-filter:
+    geoip: false
+    ipcidr: []
+    domain: []
 
 {% if local.clash.new_field_name == "true" %}
 proxies: ~
