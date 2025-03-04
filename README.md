@@ -1,47 +1,65 @@
 # subconverter
 
-Utility to convert between various proxy subscription formats.
+A powerful utility for converting between various proxy subscription formats.
 
 [![Build Status](https://github.com/asdlokj1qpi23/subconverter/actions/workflows/docker.yml/badge.svg)](https://github.com/asdlokj1qpi23/subconverter/actions)
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/asdlokj1qpi23/subconverter.svg)](https://github.com/asdlokj1qpi23/subconverter/tags)
 [![GitHub release](https://img.shields.io/github/release/asdlokj1qpi23/subconverter.svg)](https://github.com/asdlokj1qpi23/subconverter/releases)
 [![GitHub license](https://img.shields.io/github/license/asdlokj1qpi23/subconverter.svg)](https://github.com/tindy2013/subconverter/blob/master/LICENSE)
 
-[Docker README](https://github.com/asdlokj1qpi23/subconverter/blob/master/README-docker.md)
+[Docker README](https://github.com/asdlokj1qpi23/subconverter/blob/master/README-docker.md) | [中文文档](https://github.com/asdlokj1qpi23/subconverter/blob/master/README-cn.md)
 
-[中文文档](https://github.com/asdlokj1qpi23/subconverter/blob/master/README-cn.md)
+## Features
 
-- [subconverter](#subconverter)
-  - [Docker](#docker)
-  - [Supported Types](#supported-types)
-  - [Quick Usage](#quick-usage)
-    - [Access Interface](#access-interface)
-    - [Description](#description)
-  - [Advanced Usage](#advanced-usage)
-  - [Auto Upload](#auto-upload)
-  
-## Docker
+- **Multiple Format Support**: Convert between various proxy subscription formats including Clash, V2Ray, SS, SSR, and more
+- **Rule-based Conversion**: Support for custom rules and rule sets
+- **RESTful API**: Simple HTTP API for subscription conversion
+- **Docker Support**: Easy deployment using Docker
+- **Auto Upload**: Optional automatic upload to Gist
+- **Customizable**: Extensive configuration options via TOML/YAML/INI files
+- **Cross-platform**: Supports Windows, Linux, and macOS
 
-For running this docker, simply use the following commands:
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [Docker Deployment](#docker-deployment)
+- [Supported Types](#supported-types)
+- [Basic Usage](#basic-usage)
+- [Advanced Usage](#advanced-usage)
+- [Auto Upload](#auto-upload)
+
+## Quick Start
+
+1. Download the latest release from the [releases page](https://github.com/asdlokj1qpi23/subconverter/releases)
+2. Extract the archive
+3. Run the executable
+4. Access the conversion interface at `http://localhost:25500`
+
+## Docker Deployment
+
+### Using Docker Run
+
 ```bash
-# run the container detached, forward internal port 25500 to host port 25500
+# Run the container detached, forward internal port 25500 to host port 25500
 docker run -d --restart=always -p 25500:25500 asdlokj1qpi23/subconverter:latest
-# then check its status
+
+# Verify the service is running
 curl http://localhost:25500/version
-# if you see `subconverter vx.x.x backend` then the container is up and running
 ```
-Or run in docker-compose:
+
+### Using Docker Compose
+
 ```yaml
----
 version: '3'
 services:
   subconverter:
     image: asdlokj1qpi23/subconverter:latest
     container_name: subconverter
     ports:
-      - "15051:25500"
+      - "25500:25500"
     restart: always
 ```
+
 ## Supported Types
 
 | Type                              | As Source | As Target    | Target Name    |
@@ -76,64 +94,110 @@ Notice:
 
 ---
 
-## Quick Usage
+## Basic Usage
 
-> Using default groups and rulesets configuration directly, without changing any settings
+### API Endpoint
 
-### Access Interface
-
-```txt
-http://127.0.0.1:25500/sub?target=%TARGET%&url=%URL%&config=%CONFIG%
+```
+http://localhost:25500/sub?target={TARGET}&url={URL}&config={CONFIG}
 ```
 
-### Description
+### Parameters
 
-| Argument | Required | Example | Description |
-| -------- | :------: | :------ | ----------- |
-| target   | Yes      | clash   | Target subscription type. Acquire from Target Name in [Supported Types](#supported-types). |
-| url      | Yes      | https%3A%2F%2Fwww.xxx.com | Subscription to convert. Supports URLs and file paths. Process with [URLEncode](https://www.urlencoder.org/) first. |
-| config   | No       | https%3A%2F%2Fwww.xxx.com | External configuration file path. Supports URLs and file paths. Process with [URLEncode](https://www.urlencoder.org/) first. More examples can be found in [this](https://github.com/lzdnico/subconverteriniexample) repository. |
+| Parameter | Required | Description | Example |
+|-----------|:--------:|-------------|----------|
+| target | Yes | Target subscription format | clash, v2ray, ss, ssr |
+| url | Yes | Source subscription URL (URLEncoded) | https%3A%2F%2Fexample.com%2Fsub |
+| config | No | External configuration file URL (URLEncoded) | https%3A%2F%2Fexample.com%2Fconfig.ini |
 
-If you need to merge two or more subscription, you should join them with '|' before the URLEncode process.
+### Example
 
-Example:
-
-```txt
-You have 2 subscriptions and you want to merge them and generate a Clash subscription:
-1. https://dler.cloud/subscribe/ABCDE?clash=vmess
-2. https://rich.cloud/subscribe/ABCDE?clash=vmess
-
-First use '|' to separate 2 subscriptions:
-https://dler.cloud/subscribe/ABCDE?clash=vmess|https://rich.cloud/subscribe/ABCDE?clash=vmess
-
-Then process it with URLEncode to get %URL%:
-https%3A%2F%2Fdler.cloud%2Fsubscribe%2FABCDE%3Fclash%3Dvmess%7Chttps%3A%2F%2Frich.cloud%2Fsubscribe%2FABCDE%3Fclash%3Dvmess
-
-Then fill %TARGET% and %URL% in Access Interface with actual values:
-http://127.0.0.1:25500/sub?target=clash&url=https%3A%2F%2Fdler.cloud%2Fsubscribe%2FABCDE%3Fclash%3Dvmess%7Chttps%3A%2F%2Frich.cloud%2Fsubscribe%2FABCDE%3Fclash%3Dvmess
-
-Finally subscribe this link in Clash and you are done!
+To convert a subscription to Clash format:
+```
+http://localhost:25500/sub?target=clash&url=https%3A%2F%2Fexample.com%2Fsub
 ```
 
----
+### Merging Multiple Subscriptions
+
+To merge multiple subscriptions, join them with '|' before URLEncoding:
+```
+Original URLs:
+1. https://sub1.com/sub
+2. https://sub2.com/sub
+
+Combined: https://sub1.com/sub|https://sub2.com/sub
+
+URLEncoded: https%3A%2F%2Fsub1.com%2Fsub%7Chttps%3A%2F%2Fsub2.com%2Fsub
+```
 
 ## Advanced Usage
 
-Please refer to [中文文档](https://github.com/asdlokj1qpi23/subconverter/blob/master/README-cn.md#%E8%BF%9B%E9%98%B6%E7%94%A8%E6%B3%95).
+### Configuration Files
+
+The program supports three configuration file formats:
+- TOML (pref.toml)
+- YAML (pref.yml)
+- INI (pref.ini)
+
+### API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| /version | GET | Get version information |
+| /sub | GET | Convert subscription |
+| /refreshrules | GET | Refresh ruleset cache |
+| /readconf | GET | Reload configuration |
+| /updateconf | POST | Update configuration |
+
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| API_MODE | Enable/disable API mode |
+| MANAGED_PREFIX | Set managed configuration prefix |
+| API_TOKEN | Set access token for protected endpoints |
 
 ## Auto Upload
 
-> Upload Gist automatically
+To enable automatic Gist upload:
 
-Add a [Personal Access Token](https://github.com/settings/tokens/new) into [gistconf.ini](./gistconf.ini) in the root directory, then add `&upload=true` to the local subscription link, then when you access this link, the program will automatically update the content to Gist repository.
-
-Example:
-
+1. Create a [Personal Access Token](https://github.com/settings/tokens/new)
+2. Add the token to `gistconf.ini`:
 ```ini
 [common]
-;uncomment the following line and enter your token to enable upload function
-token = xxxxxxxxxxxxxxxxxxxxxxxx(Your Personal Access Token)
+token = your_personal_access_token
 ```
+3. Add `&upload=true` to your subscription URL
+
+## Development
+
+### Building from Source
+
+```bash
+git clone https://github.com/asdlokj1qpi23/subconverter.git
+cd subconverter
+cmake .
+make
+```
+
+### Requirements
+
+- C++ 17 compatible compiler
+- CMake 3.0+
+- OpenSSL
+- zlib
+- curl
+- rapidjson
+- yaml-cpp
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+
 ## Thanks
 [tindy2013](https://github.com/tindy2013)
 [https://github.com/tindy2013/subconverter](https://github.com/tindy2013/subconverter)
