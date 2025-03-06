@@ -12,7 +12,7 @@ global-client-fingerprint: chrome
 #keep-alive-interval: 30 # TCP Keep Alive 间隔,单位分钟 | 控制 Clash 发出 TCP Keep Alive 包的间隔,减少移动设备耗电问题的临时措施
 ipv6: true # 开启 IPv6 总开关，关闭阻断所有 IPv6 链接和屏蔽 DNS 请求 AAAA 记录
 dns:
-  enable: true
+  enable: false
   listen: 0.0.0.0:53
   ipv6: true
   enhanced-mode: fake-ip # 使用 fake-ip 模式
