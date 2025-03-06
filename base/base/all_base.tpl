@@ -14,7 +14,7 @@ ipv6: true # 开启 IPv6 总开关，关闭阻断所有 IPv6 链接和屏蔽 DNS
 dns:
   enable: false
   listen: 0.0.0.0:53
-  ipv6: true
+  ipv6: false
   enhanced-mode: fake-ip # 使用 fake-ip 模式
   fake-ip-range: 198.18.0.1/16
   fake-ip-filter:
