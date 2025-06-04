@@ -13,47 +13,47 @@ global-client-fingerprint: chrome
 ipv6: true # 开启 IPv6 总开关，关闭阻断所有 IPv6 链接和屏蔽 DNS 请求 AAAA 记录
 dns:
   enable: false
+  prefer-h3: true  # 对DoH服务器使用HTTP/3提高性能
   listen: 0.0.0.0:53
-  ipv6: false
-  enhanced-mode: fake-ip # 使用 fake-ip 模式
-  fake-ip-range: 198.18.0.1/16
-  fake-ip-filter:
-    - "*.lan"
-    - "*.local"
-    - localhost.ptlogin2.qq.com
-    - '+.srv.nintendo.net'
-    - '+.stun.playstation.net'
-    - '+.msftconnecttest.com'
-    - '+.msftncsi.com'
-    - '+.xboxlive.com'
-    - 'msftconnecttest.com'
-    - 'xbox.*.microsoft.com'
-    - '*.battlenet.com.cn'
-    - '*.battlenet.com'
-    - '*.blzstatic.cn'
-    - '*.battle.net'
+  ipv6: true
+  enhanced-mode: redir-host
+  respect-rules: true
   default-nameserver:
-    - 223.5.5.5
-    - 119.29.29.29
+    - tls://223.5.5.5:853
+    - tls://1.12.12.12:853
+  proxy-server-nameserver:
+    - https://223.5.5.5/dns-query
+    - https://1.12.12.12/dns-query
   nameserver:
-    - 223.5.5.5
-    - 119.29.29.29
+    - https://dns.cloudflare.com/dns-query#DNS
+    - https://dns.google/dns-query#DNS
+  nameserver-policy:
+    geosite:private,cn,geolocation-cn:
+      - https://1.12.12.12/dns-query
+      - https://223.5.5.5/dns-query
+    geosite:category-ads-all: rcode://success
+  direct-nameserver:
+    - system
+  direct-nameserver-follow-policy: false
   fallback:
-    - https://dns.google/dns-query
-    - https://cloudflare-dns.com/dns-query
-    - tls://1.1.1.1:853
+    - https://dns.google/dns-query#DNS
+    - tls://8.8.8.8:853#DNS
+    - https://cloudflare-dns.com/dns-query#DNS
   fallback-filter:
     geoip: true
     geoip-code: CN
+    geosite:
+      - gfw
     ipcidr:
       - 240.0.0.0/4
-      - 0.0.0.0/32
     domain:
       - '+.google.com'
+      - '+.github.com'
       - '+.facebook.com'
       - '+.youtube.com'
-      - '+.github.com'
       - '+.twitter.com'
+      - '+.telegram.org'
+      - '+.netflix.com'
 
 {% if local.clash.new_field_name == "true" %}
 proxies: ~
