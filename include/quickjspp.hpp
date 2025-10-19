@@ -2,6 +2,13 @@
 
 #include "quickjs/quickjs.h"
 
+#ifndef JS_TAG_BIG_FLOAT
+#define JS_TAG_BIG_FLOAT JS_TAG_BIG_INT
+#endif
+#ifndef JS_TAG_BIG_DECIMAL
+#define JS_TAG_BIG_DECIMAL JS_TAG_BIG_INT
+#endif
+
 #include <vector>
 #include <string_view>
 #include <string>
