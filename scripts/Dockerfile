@@ -1,6 +1,6 @@
 FROM alpine:3.16 AS builder
 LABEL maintainer="tindy.it@gmail.com"
-ARG THREADS="4"
+ARG THREADS="1"
 ARG SHA=""
 
 # build minimized
