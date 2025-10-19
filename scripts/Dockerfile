@@ -12,7 +12,7 @@ RUN set -xe && \
     cd quickjspp && \
     git submodule update --init && \
     cmake -DCMAKE_BUILD_TYPE=Release . && \
-    make quickjs -j $THREADS && \
+    make CONFIG_BIGNUM=y quickjs -j $THREADS && \
     install -d /usr/lib/quickjs/ && \
     install -m644 quickjs/libquickjs.a /usr/lib/quickjs/ && \
     install -d /usr/include/quickjs/ && \
