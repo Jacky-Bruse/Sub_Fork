@@ -1,6 +1,7 @@
 {% if request.target == "clash" or request.target == "clashr" %}
 port: {{ default(global.clash.http_port, "9890") }}
 socks-port: {{ default(global.clash.socks_port, "7891") }}
+mixed-port: 7893       # 混合端口（HTTP+SOCKS），兼容多端
 allow-lan: {{ default(global.clash.allow_lan, "true") }}
 mode: rule
 log-level: {{ default(global.clash.log_level, "info") }}
@@ -8,9 +9,48 @@ external-controller: :9090
 secret: 'HJKD27LS1tkL!'
 find-process-mode: strict # 进程模式 off / strict / always
 global-client-fingerprint: chrome
-#tcp-concurrent: true # TCP 并发 如果域名解析结果对应多个IP,并发请求所有IP,选择握手最快的IP进行通讯
-#keep-alive-interval: 30 # TCP Keep Alive 间隔,单位分钟 | 控制 Clash 发出 TCP Keep Alive 包的间隔,减少移动设备耗电问题的临时措施
-ipv6: true # 开启 IPv6 总开关，关闭阻断所有 IPv6 链接和屏蔽 DNS 请求 AAAA 记录
+tcp-concurrent: true # TCP 并发 如果域名解析结果对应多个IP,并发请求所有IP,选择握手最快的IP进行通讯
+keep-alive-interval: 30 # TCP Keep Alive 间隔,单位分钟 | 控制 Clash 发出 TCP Keep Alive 包的间隔,减少移动设备耗电问题的临时措施
+# ---- 内核优化参数 ----
+geodata-mode: false
+geodata-loader: memconservative
+geo-auto-update: true
+geo-update-interval: 48
+
+geox-url:
+  geoip: https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat
+  geosite: https://cdn.jsdelivr.net/gh/Jacky-Bruse/v2ray-rules-dat@release/geosite.dat
+  mmdb: https://cdn.jsdelivr.net/gh/Hackl0us/GeoIP2-CN@release/Country.mmdb
+
+ipv6: true
+
+# ---- Profile 管理 ----
+profile:
+  store-selected: true
+  store-fake-ip: true  # ✅ 启用保存 Fake IP，避免重复生成
+
+# ---- Sniffer 自动识别域名 ----
+sniffer:
+  enable: true
+  force-dns-mapping: true
+  parse-pure-ip: true
+  override-destination: true
+  sniff:
+    QUIC:
+      ports: [443, 8443]
+    TLS:
+      ports: [443, 8443]
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+  force-domain:
+    - +.openai.com
+    - chat.openai.com
+    - +.chatgpt.com
+    - +.v2ex.com
+  skip-domain:
+    - Mijia Cloud
+
 # =========================================================
 # 🧩 DNS 模块：Fake-IP 增强模式 + DoH 防污染优化
 # =========================================================
