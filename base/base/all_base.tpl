@@ -60,8 +60,9 @@ dns:
   ipv6: true 
   enhanced-mode: fake-ip 
   fake-ip-range: 198.18.0.1/16 
-  prefer-h3: true 
-  respect-rules: false
+  fake-ip-cache-size: 65536
+  prefer-h3: false 
+  respect-rules: true
   cache: true
   cache-algorithm: arc 
   concurrent: true
@@ -98,6 +99,8 @@ dns:
 
   # ✅ 用于解析代理节点域名
   proxy-server-nameserver:
+    - tls://1.1.1.1:853
+    - tls://8.8.8.8:853
     - https://223.5.5.5/dns-query
     - https://1.12.12.12/dns-query
 
