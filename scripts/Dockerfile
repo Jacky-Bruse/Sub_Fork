@@ -41,7 +41,7 @@ RUN set -xe && \
 
 # Build toml11 (separate layer for better caching)
 RUN set -xe && \
-    git clone https://github.com/ToruNiia/toml11 --branch="v3.7.1" --depth=1 && \
+    git clone https://github.com/ToruNiina/toml11 --branch="v3.7.1" --depth=1 && \
     cd toml11 && \
     cmake -DCMAKE_CXX_STANDARD=11 . && \
     make install -j $THREADS
