@@ -20,7 +20,7 @@ jobs:
           - platform: linux/amd64
             os: ubuntu-latest
           - platform: linux/arm64
-            os: ubuntu-latest
+            os: ubuntu-24.04-arm
             
     runs-on: ${{ matrix.os }}
     name: Build ${{ matrix.platform }} Image
@@ -70,6 +70,7 @@ jobs:
           build-args: |
             SHA=${{ steps.vars.outputs.sha_short }}
             BUILDKIT_INLINE_CACHE=1
+            THREADS=4
           cache-from: |
             type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache-${{ env.PLATFORM_PAIR }}
             type=registry,ref=${{ env.REGISTRY_IMAGE }}:latest
