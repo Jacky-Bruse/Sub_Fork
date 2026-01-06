@@ -47,6 +47,8 @@ RUN set -xe && \
     make install -j $THREADS
 
 # Build subconverter (changes frequently, last layer)
+# Use CACHEBUST to force rebuild: docker build --build-arg CACHEBUST=$(date +%s) ...
+ARG CACHEBUST=1
 RUN --mount=type=cache,target=/root/.cache/pip \
     set -xe && \
     git clone https://github.com/Jacky-Bruse/Sub_Fork subconverter --depth=1 && \
