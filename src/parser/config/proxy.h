@@ -124,6 +124,7 @@ struct Proxy {
     String GRPCMode;
     String ShortId;
     String Flow;
+    String Encryption;
     bool FlowShow = false;
     tribool DisableSni;
     tribool ReduceRtt;
