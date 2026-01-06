@@ -51,34 +51,26 @@ sniffer:
   skip-domain:
     - Mijia Cloud
 
-# =========================================================
-# 🧩 DNS 模块：Fake-IP 增强模式 + DoH 防污染优化
-# =========================================================
 dns:
   enable: true
-  listen: 0.0.0.0:7874 
-  ipv6: true 
-  enhanced-mode: fake-ip 
-  fake-ip-range: 198.18.0.1/16 
-  fake-ip-cache-size: 65536
-  prefer-h3: false 
-  respect-rules: true
-  cache: true
-  cache-algorithm: arc 
-  concurrent: true
-  use-hosts: true
 
+  # 如果你只是本机使用：建议 127.0.0.1:1053
+  # 如果你确实要给局域网用：更建议绑定到“LAN 网卡 IP”，而不是 0.0.0.0
+  # 例如：listen: 192.168.1.1:53  （并用防火墙只允许 192.168.1.0/24 访问）
+  listen: 127.0.0.1:1053
+
+  ipv6: true
+
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-range6: fdfe:dcba:9876::1/64
+  fake-ip-filter-mode: blacklist
   fake-ip-filter: 
-    - "*.lan"
-    - "geosite:cn"
-    - "*.local"
-    - "*.localdomain"
-    - 'localhost.ptlogin2.qq.com'
-    - 'dns.google'
-    - '*.srv.nintendo.net'
-    - '*.stun.l.google.com'
-    - '*.stun.cloudflare.com'
-
+    - "geosite:fake-ip-filter"
+    # Windows 连通性探测：建议补全常见子域名
+    - "www.msftconnecttest.com"
+    - "dns.msftncsi.com"
+    - "www.msftncsi.com"
     # ===== 腾讯海外游戏 (防止掉线) =====
     - '*.intlgame.com'
     - '*.tdatamaster.com'
@@ -97,38 +89,42 @@ dns:
     - '*.vmp.onezapp.com'
     - '*.gcloud.download.igamecj.com'
 
-  # ✅ 用于解析代理节点域名
-  proxy-server-nameserver:
-    - tls://1.1.1.1:853
-    - tls://8.8.8.8:853
+  cache: true
+  cache-algorithm: arc
+
+  # 核心逻辑：DNS 连接遵循路由规则；文档要求配置 proxy-server-nameserver
+  respect-rules: true
+  prefer-h3: false
+
+  # 文档要求：必须是 IP；用于解析 DoH/DoT 服务器域名（bootstrap）
+  # 选“未建代理前最稳可达”的 IP 即可；你在某些网络环境用 223/119 是合理的可用性取舍
+  default-nameserver:
     - https://223.5.5.5/dns-query
     - https://1.12.12.12/dns-query
 
-  # ✅ 用于解析上述 DoH 域名的基础 DNS
-  default-nameserver:
-    - tls://223.5.5.5:853
-    - tls://1.12.12.12:853
-
-  # ✅ 国内 DoH 加密防污染
-  nameserver: 
+  # 仅用于“代理节点域名解析”，解决鸡生蛋
+  # 这里用国内 DoH 域名端点是可以的（证书校验正常），也符合你“必须稳定”的诉求
+  proxy-server-nameserver:
     - https://dns.alidns.com/dns-query
     - https://doh.pub/dns-query
-    - https://120.53.53.53/dns-query
 
-  nameserver-policy: 
-    "geosite:cn": [https://dns.alidns.com/dns-query, https://doh.pub/dns-query]
-# =========================================================
-# ⚙️ TProxy 透明代理配置（TCP + UDP）
-# =========================================================
-tproxy-port: 7895
+  # 最终用于常规域名解析的上游（开启 respect-rules 后，这些连接会按你的规则走代理）
+  # 关键修正：不要用 https://1.1.1.1/dns-query 或 https://8.8.8.8/dns-query 这类 IP 形式，
+  # 否则很容易触发 TLS 证书 IP SAN 校验失败（mihomo issue 有典型报错）
+  nameserver:
+    - https://cloudflare-dns.com/dns-query
+    - https://dns.google/dns-query
+
 tun:
   enable: true
-  stack: system
-  dns-hijack:
-    - tcp://any:53
-    - udp://any:53
+  stack: mixed
   auto-route: true
   auto-detect-interface: true
+
+  # 文档与示例配置的标准写法：将 53/udp 与 53/tcp 导入内部 DNS
+  dns-hijack:
+    - "any:53"
+    - "tcp://any:53"
 
 {% if local.clash.new_field_name == "true" %}
 proxies: ~
