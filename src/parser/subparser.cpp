@@ -906,7 +906,6 @@ void explodeVless(std::string vless, Proxy &node) {
 }
 
 void explodeHysteria(std::string hysteria, Proxy &node) {
-    printf("explodeHysteria\n");
     hysteria = regReplace(hysteria, "(hysteria|hy)://", "hysteria://");
     if (regMatch(hysteria, "hysteria://(.*?)[:](.*)")) {
         explodeStdHysteria(hysteria, node);
@@ -1356,7 +1355,6 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                 if (singleproxy["reality-opts"].IsDefined()) {
                     host = singleproxy["sni"].IsDefined() ? safe_as<std::string>(singleproxy["sni"])
                                                           : safe_as<std::string>(singleproxy["servername"]);
-                    printf("host:%s", host.c_str());
                     singleproxy["reality-opts"]["public-key"] >>= pbk;
                     singleproxy["reality-opts"]["short-id"] >>= sid;
                 }
@@ -1608,7 +1606,9 @@ void explodeStdVless(std::string vless, Proxy &node) {
         case "ws"_hash:
         case "h2"_hash:
             type = getUrlArg(addition, "headerType");
-            host = getUrlArg(addition, strFind(addition, "sni") ? "sni" : "host");
+            host = getUrlArg(addition, "host");
+            if (host.empty())
+                host = getUrlArg(addition, "sni");
             path = getUrlArg(addition, "path");
             break;
         case "grpc"_hash:
@@ -1618,7 +1618,9 @@ void explodeStdVless(std::string vless, Proxy &node) {
             break;
         case "quic"_hash:
             type = getUrlArg(addition, "headerType");
-            host = getUrlArg(addition, strFind(addition, "sni") ? "sni" : "quicSecurity");
+            host = getUrlArg(addition, "quicSecurity");
+            if (host.empty())
+                host = getUrlArg(addition, "sni");
             path = getUrlArg(addition, "key");
             break;
         default:

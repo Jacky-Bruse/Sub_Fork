@@ -65,6 +65,75 @@ vmessLinkConstruct(const std::string &remarks, const std::string &add, const std
     return sb.GetString();
 }
 
+static std::string vlessLinkConstruct(const Proxy &x, const std::string &remarks) {
+    std::string add = x.Hostname;
+    if (isIPv6(add) && !add.empty() && add.front() != '[')
+        add = "[" + add + "]";
+
+    auto addParam = [](std::vector<std::string> &params, const std::string &key, const std::string &value,
+                       bool encode = true) {
+        if (value.empty())
+            return;
+        params.emplace_back(key + "=" + (encode ? urlEncode(value) : value));
+    };
+
+    std::vector<std::string> params;
+    const std::string net = x.TransferProtocol.empty() ? "tcp" : x.TransferProtocol;
+    addParam(params, "type", net, false);
+
+    // Always output encryption for VLESS (default is "none") so custom values survive conversions.
+    addParam(params, "encryption", x.Encryption.empty() ? "none" : x.Encryption);
+
+    if (!x.Flow.empty())
+        addParam(params, "flow", x.Flow);
+    if (!x.PacketEncoding.empty())
+        addParam(params, "packet-encoding", x.PacketEncoding);
+
+    if (!x.PublicKey.empty()) {
+        addParam(params, "security", "reality", false);
+        addParam(params, "pbk", x.PublicKey);
+        addParam(params, "sid", x.ShortId);
+        if (!x.Fingerprint.empty())
+            addParam(params, "fp", x.Fingerprint);
+    } else if (x.TLSSecure) {
+        addParam(params, "security", "tls", false);
+    }
+
+    if (!x.ServerName.empty())
+        addParam(params, "sni", x.ServerName);
+    if (!x.AlpnList.empty())
+        addParam(params, "alpn", join(x.AlpnList, ","));
+    else if (!x.Alpn.empty())
+        addParam(params, "alpn", x.Alpn);
+
+    if (!x.AllowInsecure.is_undef())
+        addParam(params, "insecure", x.AllowInsecure.get() ? "1" : "0", false);
+
+    switch (hash_(net)) {
+        case "ws"_hash:
+            addParam(params, "path", x.Path.empty() ? "/" : x.Path);
+            addParam(params, "host", x.Host);
+            break;
+        case "http"_hash:
+        case "h2"_hash:
+            addParam(params, "path", x.Path.empty() ? "/" : x.Path);
+            addParam(params, "host", x.Host);
+            break;
+        case "grpc"_hash:
+            addParam(params, "serviceName", x.GRPCServiceName);
+            addParam(params, "mode", x.GRPCMode);
+            break;
+        default:
+            break;
+    }
+
+    std::string proxyStr = "vless://" + x.UserId + "@" + add + ":" + std::to_string(x.Port);
+    if (!params.empty())
+        proxyStr += "?" + join(params, "&");
+    proxyStr += "#" + urlEncode(remarks);
+    return proxyStr;
+}
+
 bool matchRange(const std::string &range, int target) {
     string_array vArray = split(range, ",");
     bool match = false;
@@ -1092,9 +1161,10 @@ std::string proxyToSurge(std::vector<Proxy> &nodes, const std::string &base_conf
 }
 
 std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &ext) {
-    /// types: SS=1 SSR=2 VMess=4 Trojan=8
+    /// types: SS=1 SSR=2 VMess=4 Trojan=8 VLESS=16
     std::string proxyStr, allLinks;
-    bool ss = GETBIT(types, 1), ssr = GETBIT(types, 2), vmess = GETBIT(types, 3), trojan = GETBIT(types, 4);
+    bool ss = GETBIT(types, 1), ssr = GETBIT(types, 2), vmess = GETBIT(types, 3), trojan = GETBIT(types, 4),
+         vless = GETBIT(types, 5);
 
     for (Proxy &x: nodes) {
         std::string remark = x.Remark;
@@ -1159,6 +1229,11 @@ std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &
                         proxyStr += "&wspath=" + urlEncode(path);
                 }
                 proxyStr += "#" + urlEncode(remark);
+                break;
+            case ProxyType::VLESS:
+                if (!vless)
+                    continue;
+                proxyStr = vlessLinkConstruct(x, remark);
                 break;
             default:
                 continue;
