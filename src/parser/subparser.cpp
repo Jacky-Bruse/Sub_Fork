@@ -1869,6 +1869,7 @@ void parsePeers(Proxy &node, const std::string &data) {
 bool explodeSurge(std::string surge, std::vector<Proxy> &nodes) {
     std::multimap<std::string, std::string> proxies;
     uint32_t i, index = nodes.size();
+    const size_t original_size = nodes.size();
     INIReader ini;
 
     /*
@@ -2628,7 +2629,7 @@ bool explodeSurge(std::string surge, std::vector<Proxy> &nodes) {
         nodes.emplace_back(std::move(node));
         index++;
     }
-    return index;
+    return nodes.size() > original_size;
 }
 
 void explodeSSTap(std::string sstap, std::vector<Proxy> &nodes) {

@@ -2779,10 +2779,14 @@ proxyToSingBox(std::vector<Proxy> &nodes, rapidjson::Document &json, std::vector
                         tls.AddMember("insecure", buildBooleanValue(scv), allocator);
                     proxy.AddMember("tls", tls, allocator);
                 }
-                if (x.IdleSessionCheckInterval > 0)
-                    proxy.AddMember("idle_session_check_interval", std::to_string(x.IdleSessionCheckInterval) + "ms", allocator);
-                if (x.IdleSessionTimeout > 0)
-                    proxy.AddMember("idle_session_timeout", std::to_string(x.IdleSessionTimeout) + "ms", allocator);
+                if (x.IdleSessionCheckInterval > 0) {
+                    std::string interval = std::to_string(x.IdleSessionCheckInterval) + "ms";
+                    proxy.AddMember("idle_session_check_interval", rapidjson::Value(interval.c_str(), allocator), allocator);
+                }
+                if (x.IdleSessionTimeout > 0) {
+                    std::string timeout = std::to_string(x.IdleSessionTimeout) + "ms";
+                    proxy.AddMember("idle_session_timeout", rapidjson::Value(timeout.c_str(), allocator), allocator);
+                }
                 if (x.MinIdleSession > 0)
                     proxy.AddMember("min_idle_session", x.MinIdleSession, allocator);
                 break;
