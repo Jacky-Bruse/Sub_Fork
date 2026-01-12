@@ -556,6 +556,13 @@ proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGroupCo
                     singleproxy["up"] = x.UpMbps;
                 if (!x.DownMbps.empty())
                     singleproxy["down"] = x.DownMbps;
+                // Hysteria2 增强参数
+                if (x.UpSpeed > 0)
+                    singleproxy["up"] = std::to_string(x.UpSpeed) + " Mbps";
+                if (x.DownSpeed > 0)
+                    singleproxy["down"] = std::to_string(x.DownSpeed) + " Mbps";
+                if (x.CWND > 0)
+                    singleproxy["cwnd"] = x.CWND;
                 if (!scv.is_undef())
                     singleproxy["skip-cert-verify"] = scv.get();
                 if (!x.Alpn.empty())
@@ -566,6 +573,8 @@ proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGroupCo
                     singleproxy["obfs-password"] = x.OBFSPassword;
                 if (!x.Ports.empty())
                     singleproxy["ports"] = x.Ports;
+                if (!x.Fingerprint.empty())
+                    singleproxy["fingerprint"] = x.Fingerprint;
                 break;
             case ProxyType::TUIC:
                 singleproxy["type"] = "tuic";
@@ -585,9 +594,12 @@ proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGroupCo
                     singleproxy["skip-cert-verify"] = scv.get();
                 if (!x.Alpn.empty())
                     singleproxy["alpn"].push_back(x.Alpn);
-                singleproxy["disable-sni"] = x.DisableSni.get();
-                singleproxy["reduce-rtt"] = x.ReduceRtt.get();
-                singleproxy["request-timeout"] = x.RequestTimeout;
+                if (!x.DisableSni.is_undef())
+                    singleproxy["disable-sni"] = x.DisableSni.get();
+                if (!x.ReduceRtt.is_undef())
+                    singleproxy["reduce-rtt"] = x.ReduceRtt.get();
+                if (x.RequestTimeout > 0)
+                    singleproxy["request-timeout"] = x.RequestTimeout;
                 if (!x.UdpRelayMode.empty()) {
                     if (x.UdpRelayMode == "native" || x.UdpRelayMode == "quic") {
                         singleproxy["udp-relay-mode"] = x.UdpRelayMode;
@@ -596,6 +608,15 @@ proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGroupCo
                 if (!x.CongestionControl.empty()) {
                     singleproxy["congestion-controller"] = x.CongestionControl;
                 }
+                // TUIC 增强参数
+                if (x.MaxUdpRelayPacketSize > 0)
+                    singleproxy["max-udp-relay-packet-size"] = x.MaxUdpRelayPacketSize;
+                if (x.MaxOpenStreams > 0)
+                    singleproxy["max-open-streams"] = x.MaxOpenStreams;
+                if (!x.HeartbeatInterval.empty())
+                    singleproxy["heartbeat-interval"] = x.HeartbeatInterval;
+                if (!x.Fingerprint.empty())
+                    singleproxy["fingerprint"] = x.Fingerprint;
                 break;
             case ProxyType::VLESS:
                 singleproxy["type"] = "vless";
@@ -677,9 +698,76 @@ proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGroupCo
                         continue;
                 }
                 break;
+            case ProxyType::AnyTLS:
+                singleproxy["type"] = "anytls";
+                singleproxy["password"] = x.Password;
+                if (!x.ServerName.empty())
+                    singleproxy["sni"] = x.ServerName;
+                if (!x.Alpn.empty())
+                    singleproxy["alpn"].push_back(x.Alpn);
+                if (!x.Fingerprint.empty())
+                    singleproxy["fingerprint"] = x.Fingerprint;
+                if (x.IdleSessionCheckInterval > 0)
+                    singleproxy["idle-session-check-interval"] = x.IdleSessionCheckInterval;
+                if (x.IdleSessionTimeout > 0)
+                    singleproxy["idle-session-timeout"] = x.IdleSessionTimeout;
+                if (x.MinIdleSession > 0)
+                    singleproxy["min-idle-session"] = x.MinIdleSession;
+                if (!scv.is_undef())
+                    singleproxy["skip-cert-verify"] = scv.get();
+                break;
             default:
                 continue;
         }
+
+        // SMUX 多路复用导出 (通用)
+        if (!x.SmuxEnabled.is_undef() && x.SmuxEnabled.get()) {
+            singleproxy["smux"]["enabled"] = true;
+            if (!x.SmuxProtocol.empty())
+                singleproxy["smux"]["protocol"] = x.SmuxProtocol;
+            if (x.SmuxMaxConnections > 0)
+                singleproxy["smux"]["max-connections"] = x.SmuxMaxConnections;
+            if (x.SmuxMinStreams > 0)
+                singleproxy["smux"]["min-streams"] = x.SmuxMinStreams;
+            if (x.SmuxMaxStreams > 0)
+                singleproxy["smux"]["max-streams"] = x.SmuxMaxStreams;
+            if (!x.SmuxPadding.is_undef())
+                singleproxy["smux"]["padding"] = x.SmuxPadding.get();
+            if (!x.SmuxStatistic.is_undef())
+                singleproxy["smux"]["statistic"] = x.SmuxStatistic.get();
+            if (!x.SmuxOnlyTcp.is_undef())
+                singleproxy["smux"]["only-tcp"] = x.SmuxOnlyTcp.get();
+        }
+
+        // ECH 加密客户端问候导出 (通用)
+        if (!x.EchEnabled.is_undef() && x.EchEnabled.get()) {
+            singleproxy["ech"]["enabled"] = true;
+            if (!x.EchConfig.empty())
+                singleproxy["ech"]["config"] = x.EchConfig;
+        }
+
+        // mTLS 双向认证导出 (通用)
+        if (!x.Ca.empty())
+            singleproxy["ca"] = x.Ca;
+        if (!x.CaStr.empty())
+            singleproxy["ca-str"] = x.CaStr;
+        if (!x.ClientFingerprint.empty())
+            singleproxy["client-fingerprint"] = x.ClientFingerprint;
+
+        // IP 版本
+        if (!x.IpVersion.empty())
+            singleproxy["ip-version"] = x.IpVersion;
+
+        // UDP over TCP
+        if (!x.UdpOverTcp.is_undef() && x.UdpOverTcp.get()) {
+            singleproxy["udp-over-tcp"] = true;
+            if (x.UdpOverTcpVersion > 0)
+                singleproxy["udp-over-tcp-version"] = x.UdpOverTcpVersion;
+        }
+
+        // 端口跳跃 (针对 Hysteria2)
+        if (x.HopInterval > 0 && x.Type == ProxyType::Hysteria2)
+            singleproxy["hop-interval"] = x.HopInterval;
 
         // UDP is not supported yet in clash using snell
         // sees in https://dreamacro.github.io/clash/configuration/outbound.html#snell
@@ -2673,6 +2761,30 @@ proxyToSingBox(std::vector<Proxy> &nodes, rapidjson::Document &json, std::vector
                 if (!x.ReduceRtt.is_undef()) {
                     proxy.AddMember("zero_rtt_handshake", buildBooleanValue(x.ReduceRtt), allocator);
                 }
+                break;
+            }
+            case ProxyType::AnyTLS: {
+                addSingBoxCommonMembers(proxy, x, "anytls", allocator);
+                proxy.AddMember("password", rapidjson::StringRef(x.Password.c_str()), allocator);
+                if (!x.ServerName.empty() || !x.Fingerprint.empty() || !x.Alpn.empty()) {
+                    rapidjson::Value tls(rapidjson::kObjectType);
+                    tls.AddMember("enabled", true, allocator);
+                    if (!x.ServerName.empty())
+                        tls.AddMember("server_name", rapidjson::StringRef(x.ServerName.c_str()), allocator);
+                    if (!x.Alpn.empty()) {
+                        auto alpns = stringArrayToJsonArray(x.Alpn, ",", allocator);
+                        tls.AddMember("alpn", alpns, allocator);
+                    }
+                    if (!scv.is_undef())
+                        tls.AddMember("insecure", buildBooleanValue(scv), allocator);
+                    proxy.AddMember("tls", tls, allocator);
+                }
+                if (x.IdleSessionCheckInterval > 0)
+                    proxy.AddMember("idle_session_check_interval", std::to_string(x.IdleSessionCheckInterval) + "ms", allocator);
+                if (x.IdleSessionTimeout > 0)
+                    proxy.AddMember("idle_session_timeout", std::to_string(x.IdleSessionTimeout) + "ms", allocator);
+                if (x.MinIdleSession > 0)
+                    proxy.AddMember("min_idle_session", x.MinIdleSession, allocator);
                 break;
             }
             default:

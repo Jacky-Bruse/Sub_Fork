@@ -23,7 +23,8 @@ enum class ProxyType {
     VLESS,
     Hysteria,
     Hysteria2,
-    TUIC
+    TUIC,
+    AnyTLS
 };
 
 inline String getProxyTypeName(ProxyType type) {
@@ -54,6 +55,8 @@ inline String getProxyTypeName(ProxyType type) {
             return "Hysteria2";
         case ProxyType::TUIC:
             return "Tuic";
+        case ProxyType::AnyTLS:
+            return "AnyTLS";
         default:
             return "Unknown";
     }
@@ -133,6 +136,76 @@ struct Proxy {
     String token;
     std::vector<String> AlpnList;
     String PacketEncoding;
+
+    // SMUX 多路复用
+    tribool SmuxEnabled;
+    String SmuxProtocol;              // smux/yamux/h2mux
+    uint32_t SmuxMaxConnections = 0;
+    uint32_t SmuxMinStreams = 0;
+    uint32_t SmuxMaxStreams = 0;
+    tribool SmuxPadding;
+    tribool SmuxStatistic;
+    tribool SmuxOnlyTcp;
+
+    // ECH (Encrypted Client Hello)
+    tribool EchEnabled;
+    String EchConfig;
+
+    // 端口跳跃 (Port Hopping)
+    String Mport;                     // 端口范围
+    uint32_t HopInterval = 0;         // 跳跃间隔 (ms)
+
+    // HTTP Upgrade / WebSocket 增强
+    tribool V2rayHttpUpgrade;
+    tribool V2rayHttpUpgradeFastOpen;
+    uint32_t WsMaxEarlyData = 0;
+    String WsEarlyDataHeaderName;
+
+    // mTLS 双向认证
+    String Ca;                        // CA 证书路径
+    String CaStr;                     // CA 证书内容
+    String Certificate;               // 客户端证书
+    String PrivateKeyPem;             // PEM 格式私钥
+    String ClientFingerprint;         // 客户端 TLS 指纹
+
+    // Hysteria2 增强
+    uint32_t UpSpeed = 0;
+    uint32_t DownSpeed = 0;
+    uint32_t RecvWindowConn = 0;
+    uint32_t RecvWindow = 0;
+    tribool DisableMtuDiscovery;
+    uint32_t CWND = 0;
+
+    // TUIC 增强
+    uint64_t InitialStreamReceiveWindow = 0;
+    uint64_t MaxStreamReceiveWindow = 0;
+    uint64_t InitialConnectionReceiveWindow = 0;
+    uint64_t MaxConnectionReceiveWindow = 0;
+    uint32_t MaxUdpRelayPacketSize = 0;
+    uint32_t MaxDatagramFrameSize = 0;
+    uint32_t MaxOpenStreams = 0;
+    uint32_t IdleSessionCheckInterval = 0;
+    uint32_t IdleSessionTimeout = 0;
+    uint32_t MinIdleSession = 0;
+    uint32_t UdpMtu = 0;
+
+    // 其他 mihomo 参数
+    String IpVersion;                 // auto/4/6
+    tribool UdpOverTcp;
+    uint32_t UdpOverTcpVersion = 0;
+    String UnderlyingProxy;           // 链式代理
+    String HeartbeatInterval;
+    tribool FastOpen;
+    String SNI;                       // 显式 SNI 字段
+
+    // Trojan SS 混淆
+    String TrojanSsMethod;
+    String TrojanSsPassword;
+
+    // VLESS 增强
+    tribool GlobalPadding;
+    tribool AuthenticatedLength;
+    tribool PacketAddr;
 };
 
 #define SS_DEFAULT_GROUP "SSProvider"
@@ -147,5 +220,6 @@ struct Proxy {
 #define HYSTERIA_DEFAULT_GROUP "HysteriaProvider"
 #define HYSTERIA2_DEFAULT_GROUP "Hysteria2Provider"
 #define TUIC_DEFAULT_GROUP "TuicProvider"
+#define ANYTLS_DEFAULT_GROUP "AnyTLSProvider"
 
 #endif // PROXY_H_INCLUDED

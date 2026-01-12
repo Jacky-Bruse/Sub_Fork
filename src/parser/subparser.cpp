@@ -267,6 +267,23 @@ void tuicConstruct(Proxy &node, const std::string &group, const std::string &rem
     node.RequestTimeout = request_timeout;
 }
 
+void anyTlsConstruct(Proxy &node, const std::string &group, const std::string &remarks,
+                     const std::string &server, const std::string &port,
+                     const std::string &password, const std::string &sni,
+                     const std::string &alpn, const std::string &fingerprint,
+                     uint32_t idle_session_check_interval, uint32_t idle_session_timeout,
+                     uint32_t min_idle_session,
+                     tribool udp, tribool tfo, tribool scv) {
+    commonConstruct(node, ProxyType::AnyTLS, group, remarks, server, port, udp, tfo, scv, tribool());
+    node.Password = password;
+    node.ServerName = sni;
+    node.Alpn = alpn;
+    node.Fingerprint = fingerprint;
+    node.IdleSessionCheckInterval = idle_session_check_interval;
+    node.IdleSessionTimeout = idle_session_timeout;
+    node.MinIdleSession = min_idle_session;
+}
+
 
 void explodeVmess(std::string vmess, Proxy &node) {
     std::string version, ps, add, port, type, id, aid, net, path, host, tls, sni;
@@ -924,6 +941,84 @@ void explodeHysteria2(std::string hysteria2, Proxy &node) {
     }
 }
 
+void explodeAnyTls(std::string anytls, Proxy &node) {
+    // anytls://password@server:port?sni=xxx&alpn=xxx&fingerprint=xxx#remark
+    std::string server, port, password, sni, alpn, fingerprint, remark;
+    uint32_t idle_session_check_interval = 0, idle_session_timeout = 0, min_idle_session = 0;
+
+    anytls = anytls.substr(9); // remove "anytls://"
+
+    // Extract remark
+    size_t hashPos = anytls.find('#');
+    if (hashPos != std::string::npos) {
+        remark = urlDecode(anytls.substr(hashPos + 1));
+        anytls = anytls.substr(0, hashPos);
+    }
+
+    // Extract query parameters
+    size_t queryPos = anytls.find('?');
+    std::string query;
+    if (queryPos != std::string::npos) {
+        query = anytls.substr(queryPos + 1);
+        anytls = anytls.substr(0, queryPos);
+    }
+
+    // Parse password@server:port
+    size_t atPos = anytls.find('@');
+    if (atPos == std::string::npos)
+        return;
+    password = urlDecode(anytls.substr(0, atPos));
+    std::string serverPort = anytls.substr(atPos + 1);
+
+    // Handle IPv6 addresses
+    size_t lastColonPos = serverPort.rfind(':');
+    if (lastColonPos == std::string::npos)
+        return;
+
+    // Check if it's IPv6 (has brackets or multiple colons before last colon)
+    size_t bracketPos = serverPort.find('[');
+    if (bracketPos != std::string::npos) {
+        size_t closeBracket = serverPort.find(']');
+        if (closeBracket != std::string::npos) {
+            server = serverPort.substr(bracketPos + 1, closeBracket - bracketPos - 1);
+            port = serverPort.substr(closeBracket + 2); // skip ]:
+        }
+    } else {
+        server = serverPort.substr(0, lastColonPos);
+        port = serverPort.substr(lastColonPos + 1);
+    }
+
+    // Parse query parameters
+    if (!query.empty()) {
+        string_array params = split(query, "&");
+        for (const auto &param : params) {
+            string_array kv = split(param, "=");
+            if (kv.size() < 2)
+                continue;
+            std::string key = kv[0];
+            std::string value = urlDecode(kv[1]);
+            if (key == "sni")
+                sni = value;
+            else if (key == "alpn")
+                alpn = value;
+            else if (key == "fingerprint")
+                fingerprint = value;
+            else if (key == "idle-session-check-interval")
+                idle_session_check_interval = to_int(value);
+            else if (key == "idle-session-timeout")
+                idle_session_timeout = to_int(value);
+            else if (key == "min-idle-session")
+                min_idle_session = to_int(value);
+        }
+    }
+
+    if (remark.empty())
+        remark = server + ":" + port;
+
+    anyTlsConstruct(node, ANYTLS_DEFAULT_GROUP, remark, server, port, password, sni, alpn, fingerprint,
+                    idle_session_check_interval, idle_session_timeout, min_idle_session);
+}
+
 void explodeQuan(const std::string &quan, Proxy &node) {
     std::string strTemp, itemName, itemVal;
     std::string group = V2RAY_DEFAULT_GROUP, ps, add, port, cipher, type = "none", id, aid = "0", net = "tcp", path, host, edge, tls;
@@ -1431,6 +1526,26 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                               tribool(), scv, reduceRtt, disableSni, request_timeout);
 
                 break;
+            case "anytls"_hash: {
+                group = ANYTLS_DEFAULT_GROUP;
+                std::string anytls_fingerprint;
+                uint32_t idle_session_check_interval = 0, idle_session_timeout = 0, min_idle_session = 0;
+                singleproxy["password"] >>= password;
+                singleproxy["sni"] >>= sni;
+                singleproxy["alpn"] >>= alpn;
+                singleproxy["fingerprint"] >>= anytls_fingerprint;
+                if (singleproxy["idle-session-check-interval"].IsDefined())
+                    idle_session_check_interval = safe_as<uint32_t>(singleproxy["idle-session-check-interval"]);
+                if (singleproxy["idle-session-timeout"].IsDefined())
+                    idle_session_timeout = safe_as<uint32_t>(singleproxy["idle-session-timeout"]);
+                if (singleproxy["min-idle-session"].IsDefined())
+                    min_idle_session = safe_as<uint32_t>(singleproxy["min-idle-session"]);
+
+                anyTlsConstruct(node, group, ps, server, port, password, sni, alpn, anytls_fingerprint,
+                                idle_session_check_interval, idle_session_timeout, min_idle_session,
+                                udp, tfo, scv);
+                break;
+            }
             default:
                 continue;
         }
@@ -2985,6 +3100,8 @@ void explode(const std::string &link, Proxy &node) {
         explodeTuic(link, node);
     else if (strFind(link, "hysteria2://") || strFind(link, "hy2://"))
         explodeHysteria2(link, node);
+    else if (strFind(link, "anytls://"))
+        explodeAnyTls(link, node);
     else if (isLink(link))
         explodeHTTPSub(link, node);
 }

@@ -92,6 +92,15 @@ void tuicConstruct(Proxy &node, const std::string &group, const std::string &rem
                    tribool scv = tribool(), tribool reduceRtt = tribool(), tribool disableSni = tribool(),
                    uint16_t request_timeout = 15000);
 
+void anyTlsConstruct(Proxy &node, const std::string &group, const std::string &remarks,
+                     const std::string &server, const std::string &port,
+                     const std::string &password, const std::string &sni,
+                     const std::string &alpn, const std::string &fingerprint,
+                     uint32_t idle_session_check_interval = 0, uint32_t idle_session_timeout = 0,
+                     uint32_t min_idle_session = 0,
+                     tribool udp = tribool(), tribool tfo = tribool(),
+                     tribool scv = tribool());
+
 void explodeVmess(std::string vmess, Proxy &node);
 
 void explodeSSR(std::string ssr, Proxy &node);
@@ -119,6 +128,8 @@ void explodeVless(std::string vless, Proxy &node);
 void explodeHysteria(std::string hysteria, Proxy &node);
 
 void explodeHysteria2(std::string hysteria2, Proxy &node);
+
+void explodeAnyTls(std::string anytls, Proxy &node);
 
 /// Parse a link
 void explode(const std::string &link, Proxy &node);
