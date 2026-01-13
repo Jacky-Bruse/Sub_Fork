@@ -4,3 +4,4 @@ cmake-build-debug
 .idea
 base/cache
 .claude/settings.local.json
+tmpclaude-*-cwd
