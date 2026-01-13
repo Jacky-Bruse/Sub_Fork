@@ -1490,7 +1490,7 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                                   insecure, ports, sni,
                                   udp, tfo, scv);
                 break;
-            case "hysteria2"_hash:
+            case "hysteria2"_hash: {
                 group = HYSTERIA2_DEFAULT_GROUP;
                 singleproxy["password"] >>= password;
                 if (password.empty())
@@ -1509,7 +1509,8 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                 hysteria2Construct(node, group, ps, server, port, password, host, up, down, alpn, obfsParam,
                                    obfsPassword, sni, public_key, ports, hop_interval, udp, tfo, scv);
                 break;
-            case "tuic"_hash:
+            }
+            case "tuic"_hash: {
                 group = TUIC_DEFAULT_GROUP;
                 uint16_t request_timeout;
                 singleproxy["password"] >>= password;
@@ -1530,6 +1531,7 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                               tribool(), scv, reduceRtt, disableSni, request_timeout);
 
                 break;
+            }
             case "anytls"_hash: {
                 group = ANYTLS_DEFAULT_GROUP;
                 std::string anytls_fingerprint;
