@@ -120,11 +120,10 @@ tun:
   stack: mixed
   auto-route: true
   auto-detect-interface: true
-
-  # 文档与示例配置的标准写法：将 53/udp 与 53/tcp 导入内部 DNS
   dns-hijack:
-    - "any:53"
-    - "tcp://any:53"
+    - any:53
+    - tcp://any:53
+  strict-route: true
 
 {% if local.clash.new_field_name == "true" %}
 proxies: ~
