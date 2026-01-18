@@ -2,12 +2,7 @@
 
 A powerful utility for converting between various proxy subscription formats.
 
-[![Build Status](https://github.com/asdlokj1qpi233/subconverter/actions/workflows/docker.yml/badge.svg)](https://github.com/asdlokj1qpi23/subconverter/actions)
-[![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/asdlokj1qpi23/subconverter.svg)](https://github.com/asdlokj1qpi23/subconverter/tags)
-[![GitHub release](https://img.shields.io/github/release/asdlokj1qpi23/subconverter.svg)](https://github.com/asdlokj1qpi23/subconverter/releases)
-[![GitHub license](https://img.shields.io/github/license/asdlokj1qpi23/subconverter.svg)](https://github.com/tindy2013/subconverter/blob/master/LICENSE)
-
-[Docker README](https://github.com/asdlokj1qpi23/subconverter/blob/master/README-docker.md) | [中文文档](https://github.com/asdlokj1qpi23/subconverter/blob/master/README-cn.md)
+https://github.com/MetaCubeX/subconverter
 
 ## Features
 
