@@ -114,7 +114,7 @@ dns:
 
 tun:
   enable: true
-  stack: mixed
+  stack: system
   auto-route: true
   auto-detect-interface: true
   dns-hijack:
