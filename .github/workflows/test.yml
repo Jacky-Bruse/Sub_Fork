@@ -1,0 +1,71 @@
+name: Regression Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            cmake g++ \
+            libcurl4-openssl-dev \
+            libpcre2-dev \
+            libyaml-cpp-dev \
+            rapidjson-dev
+
+      - name: Install toml11
+        run: |
+          git clone https://github.com/ToruNiina/toml11 --branch="v4.3.0" --depth=1
+          cd toml11
+          cmake -DCMAKE_CXX_STANDARD=11 .
+          sudo make install -j$(nproc)
+          cd .. && rm -rf toml11
+
+      - name: Install quickjspp
+        run: |
+          git clone --no-checkout https://github.com/ftk/quickjspp.git
+          cd quickjspp
+          git fetch origin 0c00c48895919fc02da3f191a2da06addeb07f09
+          git checkout 0c00c48895919fc02da3f191a2da06addeb07f09
+          git submodule update --init
+          cmake -DCMAKE_BUILD_TYPE=Release .
+          make quickjs -j$(nproc)
+          sudo install -d /usr/lib/quickjs/
+          sudo install -m644 quickjs/libquickjs.a /usr/lib/quickjs/
+          sudo install -d /usr/include/quickjs/
+          sudo install -m644 quickjs/quickjs.h quickjs/quickjs-libc.h /usr/include/quickjs/
+          sudo install -m644 quickjspp.hpp /usr/include
+          cd .. && rm -rf quickjspp
+
+      - name: Install libcron
+        run: |
+          git clone https://github.com/PerMalmberg/libcron --depth=1
+          cd libcron
+          git submodule update --init
+          cmake -DCMAKE_BUILD_TYPE=Release .
+          make libcron -j$(nproc)
+          sudo install -m644 libcron/out/Release/liblibcron.a /usr/lib/
+          sudo install -d /usr/include/libcron/
+          sudo install -m644 libcron/include/libcron/* /usr/include/libcron/
+          sudo install -d /usr/include/date/
+          sudo install -m644 libcron/externals/date/include/date/* /usr/include/date/
+          cd .. && rm -rf libcron
+
+      - name: Configure
+        run: cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DBUILD_STATIC_LIBRARY=OFF .
+
+      - name: Build test
+        run: make pr4_regression_test -j$(nproc)
+
+      - name: Run test
+        run: ./pr4_regression_test

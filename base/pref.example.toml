@@ -117,9 +117,9 @@ match = '^Smart Access expire: (\d+)/(\d+)/(\d+)$'
 replace = '$1:$2:$3:0:0:0'
 
 [node_pref]
-#udp_flag = true
+#udp_flag = false
 #tcp_fast_open_flag = false
-#skip_cert_verify_flag = true
+#skip_cert_verify_flag = false
 #tls13_flag = false
 
 sort_flag = false
@@ -135,13 +135,14 @@ filter_deprecated_nodes = false
 append_sub_userinfo = true
 clash_use_new_field_name = true
 
-# Generate style of the proxies section of Clash subscriptions.
+# Generate style of the proxies and proxy groups section of Clash subscriptions.
 # Supported styles: block, flow, compact
 # Block: - name: name1    Flow: - {name: name1, key: value}    Compact: [{name: name1, key: value},{name: name2, key: value}]
 #         key: value           - {name: name2, key: value}
 #       - name: name2
 #         key: value
 clash_proxies_style = "flow"
+clash_proxy_groups_style = "block"
 
 # add Clash mode to sing-box rules, and add a GLOBAL group to end of outbounds
 singbox_add_clash_modes = true
@@ -236,12 +237,30 @@ key = "clash.socks_port"
 value = "7891"
 
 [[template.globals]]
+key = "clash.mixed_port"
+value = "7893"
+
+[[template.globals]]
 key = "clash.allow_lan"
 value = "true"
 
 [[template.globals]]
 key = "clash.log_level"
 value = "info"
+
+[[template.globals]]
+key = "clash.external_controller"
+value = "127.0.0.1:9090"
+
+# 仅当 external_controller 改为对外监听时才需要设置，绑回环时可留空
+[[template.globals]]
+key = "clash.secret"
+value = ""
+
+# 自建节点的域名，会以 "+.域名" 加入 dns.fake-ip-filter，留空则不生成该条
+[[template.globals]]
+key = "clash.node_domain"
+value = ""
 
 [[template.globals]]
 key = "singbox.allow_lan"
@@ -327,8 +346,8 @@ port = 25500
 serve_file_root = "web"
 
 [advanced]
-log_level = "debug"
-print_debug_info = true
+log_level = "info"
+print_debug_info = false
 max_pending_connections = 10240
 max_concurrent_threads = 4
 max_allowed_rulesets = 64
@@ -337,7 +356,7 @@ max_allowed_download_size = 0
 enable_cache = true
 cache_subscription = 60
 cache_config = 300
-cache_ruleset = 21600
+cache_ruleset = 300
 script_clean_context = true
-async_fetch_ruleset = false
+async_fetch_ruleset = true
 skip_failed_links = true

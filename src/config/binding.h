@@ -17,9 +17,9 @@ namespace toml
         static ProxyGroupConfig from_toml(const value& v)
         {
             ProxyGroupConfig conf;
-            conf.Name = toml::find<String>(v, "name");
-            String type = toml::find<String>(v, "type");
-            String strategy = toml::find_or<String>(v, "strategy", "");
+            conf.Name = find<String>(v, "name");
+            String type = find<String>(v, "type");
+            String strategy = find_or<String>(v, "strategy", "");
             switch(hash_(type))
             {
             case "select"_hash:
@@ -27,18 +27,18 @@ namespace toml
                 break;
             case "url-test"_hash:
                 conf.Type = ProxyGroupType::URLTest;
-                conf.Url = toml::find<String>(v, "url");
-                conf.Interval = toml::find<Integer>(v, "interval");
-                conf.Tolerance = toml::find_or<Integer>(v, "tolerance", 0);
+                conf.Url = find<String>(v, "url");
+                conf.Interval = find<Integer>(v, "interval");
+                conf.Tolerance = find_or<Integer>(v, "tolerance", 0);
                 if(v.contains("lazy"))
-                    conf.Lazy = toml::find_or<bool>(v, "lazy", false);
+                    conf.Lazy = find_or<bool>(v, "lazy", false);
                 if(v.contains("evaluate-before-use"))
-                    conf.EvaluateBeforeUse = toml::find_or(v, "evaluate-before-use", conf.EvaluateBeforeUse.get());
+                    conf.EvaluateBeforeUse = find_or(v, "evaluate-before-use", conf.EvaluateBeforeUse.get());
                 break;
             case "load-balance"_hash:
                 conf.Type = ProxyGroupType::LoadBalance;
-                conf.Url = toml::find<String>(v, "url");
-                conf.Interval = toml::find<Integer>(v, "interval");
+                conf.Url = find<String>(v, "url");
+                conf.Interval = find<Integer>(v, "interval");
                 switch(hash_(strategy))
                 {
                 case "consistent-hashing"_hash:
@@ -49,14 +49,14 @@ namespace toml
                     break;
                 }
                 if(v.contains("persistent"))
-                    conf.Persistent = toml::find_or(v, "persistent", conf.Persistent.get());
+                    conf.Persistent = find_or(v, "persistent", conf.Persistent.get());
                 break;
             case "fallback"_hash:
                 conf.Type = ProxyGroupType::Fallback;
-                conf.Url = toml::find<String>(v, "url");
-                conf.Interval = toml::find<Integer>(v, "interval");
+                conf.Url = find<String>(v, "url");
+                conf.Interval = find<Integer>(v, "interval");
                 if(v.contains("evaluate-before-use"))
-                    conf.EvaluateBeforeUse = toml::find_or(v, "evaluate-before-use", conf.EvaluateBeforeUse.get());
+                    conf.EvaluateBeforeUse = find_or(v, "evaluate-before-use", conf.EvaluateBeforeUse.get());
                 break;
             case "relay"_hash:
                 conf.Type = ProxyGroupType::Relay;
@@ -64,16 +64,41 @@ namespace toml
             case "ssid"_hash:
                 conf.Type = ProxyGroupType::SSID;
                 break;
+            case "smart"_hash:
+                conf.Type = ProxyGroupType::Smart;
+                conf.Url = find<String>(v, "url");
+                conf.Interval = find<Integer>(v, "interval");
+                conf.Tolerance = find_or<Integer>(v, "tolerance", 0);
+                if(v.contains("lazy"))
+                    conf.Lazy = find_or<bool>(v, "lazy", false);
+                if(v.contains("evaluate-before-use"))
+                    conf.EvaluateBeforeUse = find_or(v, "evaluate-before-use", conf.EvaluateBeforeUse.get());
+                break;
             default:
-                throw toml::syntax_error("Proxy Group has incorrect type, should be one of following:\n  select, url-test, load-balance, fallback, relay, ssid", v.at("type").location());
+                throw serialization_error(format_error("Proxy Group has unsupported type!", v.at("type").location(), "should be one of following: select, url-test, load-balance, fallback, relay, ssid"), v.at("type").location());
             }
-            conf.Timeout = toml::find_or(v, "timeout", 5);
-            conf.Proxies = toml::find_or<StrArray>(v, "rule", {});
-            conf.UsingProvider = toml::find_or<StrArray>(v, "use", {});
+            conf.Timeout = find_or(v, "timeout", 5);
+            conf.Proxies = find_or<StrArray>(v, "rule", {});
+            conf.UsingProvider = find_or<StrArray>(v, "use", {});
             if(conf.Proxies.empty() && conf.UsingProvider.empty())
-                throw toml::syntax_error("Proxy Group must contains at least one of proxy match rule or provider", v.location());
+                throw serialization_error(format_error("Proxy Group must contains at least one of proxy match rule or provider!", v.location(), "here"), v.location());
             if(v.contains("disable-udp"))
-                conf.DisableUdp = toml::find_or(v, "disable-udp", conf.DisableUdp.get());
+                conf.DisableUdp = find_or(v, "disable-udp", conf.DisableUdp.get());
+            if(v.contains("extra"))
+            {
+                const auto extra_table = toml::find<toml::table>(v, "extra");
+                for(const auto& [k, val] : extra_table)
+                {
+                    if(val.is_string())
+                        conf.Extras[k] = val.as_string();
+                    else if(val.is_boolean())
+                        conf.Extras[k] = val.as_boolean() ? "true" : "false";
+                    else if(val.is_integer())
+                        conf.Extras[k] = std::to_string(val.as_integer());
+                    else
+                        conf.Extras[k] = toml::format(val);
+                }
+            }
             return conf;
         }
     };
@@ -84,8 +109,8 @@ namespace toml
         static RulesetConfig from_toml(const value& v)
         {
             RulesetConfig conf;
-            conf.Group = toml::find<String>(v, "group");
-            String type = toml::find_or<String>(v, "type", "surge-ruleset");
+            conf.Group = find<String>(v, "group");
+            String type = find_or<String>(v, "type", "surge-ruleset");
             switch(hash_(type))
             {
             /*
@@ -122,10 +147,21 @@ namespace toml
                 conf.Url = type + ":";
                 break;
             default:
-                throw toml::syntax_error("Ruleset has incorrect type, should be one of following:\n  surge-ruleset, quantumultx, clash-domain, clash-ipcidr, clash-classic", v.at("type").location());
+                throw serialization_error(format_error("Ruleset has unsupported type!", v.at("type").location(), "should be one of following: surge-ruleset, quantumultx, clash-domain, clash-ipcidr, clash-classic"), v.at("type").location());
             }
-            conf.Url += toml::find<String>(v, "ruleset");
-            conf.Interval = toml::find_or<Integer>(v, "interval", 86400);
+            conf.Url += find<String>(v, "ruleset");
+            conf.Format = find_or<String>(v, "format", "");
+            if(!conf.Format.empty())
+            {
+                conf.Format = toLower(conf.Format);
+                if(type != "clash-domain" && type != "clash-ipcidr" && type != "clash-classic")
+                    throw serialization_error(format_error("Ruleset format is only supported for Clash rule-providers!", v.at("format").location(), "format is valid only with type: clash-domain, clash-ipcidr, clash-classic"), v.at("format").location());
+                if(conf.Format != "yaml" && conf.Format != "text" && conf.Format != "mrs")
+                    throw serialization_error(format_error("Ruleset has unsupported format!", v.at("format").location(), "should be one of following: yaml, text, mrs"), v.at("format").location());
+                if(conf.Format == "mrs" && type == "clash-classic")
+                    throw serialization_error(format_error("Ruleset format mrs is unsupported for clash-classic!", v.at("format").location(), "mrs can only be used with clash-domain or clash-ipcidr"), v.at("format").location());
+            }
+            conf.Interval = find_or<Integer>(v, "interval", 86400);
             return conf;
         }
     };
@@ -138,14 +174,14 @@ namespace toml
             RegexMatchConfig conf;
             if(v.contains("script"))
             {
-                conf.Script = toml::find<String>(v, "script");
+                conf.Script = find<String>(v, "script");
                 return conf;
             }
-            conf.Match = toml::find<String>(v, "match");
+            conf.Match = find<String>(v, "match");
             if(v.contains("emoji"))
-                conf.Replace = toml::find<String>(v, "emoji");
+                conf.Replace = find<String>(v, "emoji");
             else
-                conf.Replace = toml::find<String>(v, "replace");
+                conf.Replace = find<String>(v, "replace");
             return conf;
         }
     };
@@ -156,10 +192,10 @@ namespace toml
         static CronTaskConfig from_toml(const value& v)
         {
             CronTaskConfig conf;
-            conf.Name = toml::find<String>(v, "name");
-            conf.CronExp = toml::find<String>(v, "cronexp");
-            conf.Path = toml::find<String>(v, "path");
-            conf.Timeout = toml::find_or<Integer>(v, "timeout", 0);
+            conf.Name = find<String>(v, "name");
+            conf.CronExp = find<String>(v, "cronexp");
+            conf.Path = find<String>(v, "path");
+            conf.Timeout = find_or<Integer>(v, "timeout", 0);
             return conf;
         }
     };
@@ -220,8 +256,23 @@ namespace INIBinding
                 case "ssid"_hash:
                     conf.Type = ProxyGroupType::SSID;
                     break;
+                case "smart"_hash:
+                    conf.Type = ProxyGroupType::Smart;
+                    break;
                 default:
                     continue;
+                }
+
+                while(rules_upper_bound > 2 && startsWith(vArray[rules_upper_bound - 1], "!!") &&
+                      !startsWith(vArray[rules_upper_bound - 1], "!!PROVIDER="))
+                {
+                    std::string keyval = vArray[rules_upper_bound - 1].substr(2);
+                    auto eqpos = keyval.find('=');
+                    if(eqpos != std::string::npos)
+                        conf.Extras[keyval.substr(0, eqpos)] = keyval.substr(eqpos + 1);
+                    else
+                        conf.Extras[keyval] = "true";
+                    rules_upper_bound--;
                 }
 
                 if(conf.Type == ProxyGroupType::URLTest || conf.Type == ProxyGroupType::LoadBalance || conf.Type == ProxyGroupType::Fallback)
@@ -240,6 +291,15 @@ namespace INIBinding
                         string_array list = split(vArray[i].substr(11), ",");
                         conf.UsingProvider.reserve(conf.UsingProvider.size() + list.size());
                         std::move(list.begin(), list.end(), std::back_inserter(conf.UsingProvider));
+                    }
+                    else if(startsWith(vArray[i], "!!"))
+                    {
+                        std::string keyval = vArray[i].substr(2);
+                        auto eqpos = keyval.find('=');
+                        if(eqpos != std::string::npos)
+                            conf.Extras[keyval.substr(0, eqpos)] = keyval.substr(eqpos + 1);
+                        else
+                            conf.Extras[keyval] = "true";
                     }
                     else
                         conf.Proxies.emplace_back(std::move(vArray[i]));

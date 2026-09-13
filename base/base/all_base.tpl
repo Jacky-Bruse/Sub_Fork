@@ -97,6 +97,8 @@ dns:
     "geosite:cn,private": # 包含 cn 和 私有域名
       - https://dns.alidns.com/dns-query
       - https://doh.pub/dns-query
+    "geosite:category-ads-all": # 广告域名
+      - "rcode://name_error"
     "geosite:category-ai-!cn":
       - https://cloudflare-dns.com/dns-query
       - https://dns.google/dns-query
@@ -126,15 +128,8 @@ dns:
     - "*.openaiapi.com"
     - "*.auth0.com"
 
-    # 自建节点域名：sniffer 的 override-destination 会丢弃原始目标 IP、把嗅探到的域名
-    # 重新丢回 DNS 解析，fake-ip 模式下会拿到 fake IP 造成环路/超时（mihomo issue #2740）。
-    # 域名值放 pref 的 clash.node_domain，不写进公开仓库；未设置时本条不输出。
-{% if default(global.clash.node_domain, "") != "" %}
-    - {{ yaml_quote("+.", global.clash.node_domain) }}
-{% endif %}
-
     - "dns.google"
-    # - "geosite:fake-ip-filter"
+    - "geosite:fake-ip-filter"
     # ===============================================================
     # 1) 基础设施与局域网（稳定必留）
     # ===============================================================

@@ -50,6 +50,7 @@ node_pref:
   append_sub_userinfo: true
   clash_use_new_field_name: true
   clash_proxies_style: flow
+  clash_proxy_groups_style: block
   singbox_add_clash_modes: true
   rename_node:
 #  - {match: "\\(?((x|X)?(\\d+)(\\.?\\d+)?)((\\s?倍率?)|(x|X))\\)?", replace: "$1x"}
@@ -106,11 +107,17 @@ template:
   globals:
   - {key: clash.http_port, value: 7890}
   - {key: clash.socks_port, value: 7891}
+  - {key: clash.mixed_port, value: 7893}
   - {key: clash.allow_lan, value: true}
   - {key: clash.log_level, value: info}
+  - {key: clash.external_controller, value: '127.0.0.1:9090'}
+  # 仅当 external_controller 改为对外监听时才需要设置，绑回环时可留空
+  - {key: clash.secret, value: ''}
+  # 自建节点的域名，会以 "+.域名" 加入 dns.fake-ip-filter，留空则不生成该条
+  - {key: clash.node_domain, value: ''}
   - {key: singbox.allow_lan, value: true}
   - {key: singbox.mixed_port, value: 2080}
-  
+
 aliases:
   - {uri: /v, target: /version}
   - {uri: /clash, target: "/sub?target=clash"}
@@ -151,7 +158,7 @@ advanced:
   enable_cache: false
   cache_subscription: 60
   cache_config: 300
-  cache_ruleset: 21600
+  cache_ruleset: 300
   script_clean_context: true
   async_fetch_ruleset: false
   skip_failed_links: false

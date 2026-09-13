@@ -40,6 +40,7 @@ struct extra_settings
     bool clash_classical_ruleset = false;
     std::string sort_script;
     std::string clash_proxies_style = "flow";
+    std::string clash_proxy_groups_style = "flow";
     bool authorized = false;
 
     extra_settings() = default;
@@ -73,4 +74,5 @@ void proxyToQuan(std::vector<Proxy> &nodes, INIReader &ini, std::vector<RulesetC
 std::string proxyToSSD(std::vector<Proxy> &nodes, std::string &group, std::string &userinfo, extra_settings &ext);
 std::string proxyToSingBox(std::vector<Proxy> &nodes, const std::string &base_conf, std::vector<RulesetContent> &ruleset_content_array, const ProxyGroupConfigs &extra_proxy_group, extra_settings &ext);
 void replaceAll(std::string& input, const std::string& search, const std::string& replace);
+std::string beautifyStringTags(std::string input);
 #endif // SUBEXPORT_H_INCLUDED
