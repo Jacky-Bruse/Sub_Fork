@@ -50,68 +50,142 @@ sniffer:
 
 dns:
   enable: true
-
-  # 如果你只是本机使用：建议 127.0.0.1:1053
-  # 如果你确实要给局域网用：更建议绑定到“LAN 网卡 IP”，而不是 0.0.0.0
-  # 例如：listen: 192.168.1.1:53  （并用防火墙只允许 192.168.1.0/24 访问）
-  listen: 127.0.0.1:1053
-
-  ipv6: true
-
+  listen: 0.0.0.0:7874
+  ipv6: true  # 建议关闭，除非有特殊需求，避免路由黑洞
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
+  # 若你不想动 IPv6 映射，也可以先不加这一行（但“稳定一致性”会略差一些）
   fake-ip-range6: fdfe:dcba:9876::1/64
-  fake-ip-filter-mode: blacklist
-  fake-ip-filter: 
-    - "geosite:fake-ip-filter"
-    # Windows 连通性探测：建议补全常见子域名
-    - "www.msftconnecttest.com"
-    - "dns.msftncsi.com"
-    - "www.msftncsi.com"
-    # ===== 腾讯海外游戏 (防止掉线) =====
-    - '*.intlgame.com'
-    - '*.tdatamaster.com'
-    - '*.igamecj.com'
-    - '*.proximabeta.com'
-    - '*.gjacky.com'
-    - '*.tcdnos.com'
-    - '*.listdl.com'
-    - '*.helpshift.com'
-    - '*.adjust.com'
-    - '*.adjust.io'
-    - '*.adjust.world'
-    - '*.appsflyersdk.com'
-    - '*.anticheatexpert.com'
-    - '*.wetest.net'
-    - '*.vmp.onezapp.com'
-    - '*.gcloud.download.igamecj.com'
-
+  prefer-h3: false
+  respect-rules: true
   cache: true
   cache-algorithm: arc
-
-  # 核心逻辑：DNS 连接遵循路由规则；文档要求配置 proxy-server-nameserver
-  respect-rules: true
-  prefer-h3: false
-
-  # 文档要求：必须是 IP；用于解析 DoH/DoT 服务器域名（bootstrap）
-  # 选“未建代理前最稳可达”的 IP 即可；你在某些网络环境用 223/119 是合理的可用性取舍
+  concurrent: true
+  use-hosts: true
+  
+  # 核心修复 1: 必须使用国内基础 DNS 确保能解析机场域名
   default-nameserver:
     - https://223.5.5.5/dns-query
     - https://1.12.12.12/dns-query
-
-  # 仅用于“代理节点域名解析”，解决鸡生蛋
-  # 这里用国内 DoH 域名端点是可以的（证书校验正常），也符合你“必须稳定”的诉求
+  
+  # 核心修复 2: 代理节点域名的解析也必须走国内 DNS
   proxy-server-nameserver:
-    - https://dns.alidns.com/dns-query
-    - https://doh.pub/dns-query
+    - https://223.5.5.5/dns-query
+    - https://1.12.12.12/dns-query
 
-  # 最终用于常规域名解析的上游（开启 respect-rules 后，这些连接会按你的规则走代理）
-  # 关键修正：不要用 https://1.1.1.1/dns-query 或 https://8.8.8.8/dns-query 这类 IP 形式，
-  # 否则很容易触发 TLS 证书 IP SAN 校验失败（mihomo issue 有典型报错）
+  # 你的 Nameserver (主要用于解析国外域名，走代理)
   nameserver:
     - https://cloudflare-dns.com/dns-query
     - https://dns.google/dns-query
 
+  # 策略分流 (核心优化: 国内域名指定走国内 DoH，准确且防污染)
+  nameserver-policy:
+    "geosite:cn,private": # 包含 cn 和 私有域名
+      - https://dns.alidns.com/dns-query
+      - https://doh.pub/dns-query
+    "geosite:category-ai-!cn":
+      - https://cloudflare-dns.com/dns-query
+      - https://dns.google/dns-query
+
+  # Fallback 模块优化: 
+  # 因为有了上面的 nameserver-policy，fallback 实际上很少被触发。
+  # 我们可以保留一个简单的配置作为兜底，或者直接移除。
+  # 如果你一定要用，保持简单：
+  fallback:
+    - https://cloudflare-dns.com/dns-query
+    - https://dns.google/dns-query
+  
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    ipcidr:
+      - 240.0.0.0/4
+  
+  # 优化后的 Filter
+  fake-ip-filter:
+    # "+.openai.com" 已覆盖 *.openai.com / auth.openai.com / api.openai.com
+    - "+.openai.com"
+    - "api.openai.com.cdn.cloudflare.net"   # 后缀是 cloudflare.net，不被上一条覆盖
+    - "*.chatgpt.com"
+    - "*.oaiusercontent.com"
+    - "*.oaistatic.com"
+    - "*.openaiapi.com"
+    - "*.auth0.com"
+
+    # 自建节点域名：sniffer 的 override-destination 会丢弃原始目标 IP、把嗅探到的域名
+    # 重新丢回 DNS 解析，fake-ip 模式下会拿到 fake IP 造成环路/超时（mihomo issue #2740）。
+    # 域名值放 pref 的 clash.node_domain，不写进公开仓库；未设置时本条不输出。
+{% if default(global.clash.node_domain, "") != "" %}
+    - {{ yaml_quote("+.", global.clash.node_domain) }}
+{% endif %}
+
+    - "dns.google"
+    # ===============================================================
+    # 1) 基础设施与局域网（稳定必留）
+    # ===============================================================
+    - "geosite:private"
+    # ===============================================================
+    # 2) 操作系统连通性检测（稳定必留）
+    # ===============================================================
+    - "geosite:connectivity-check"
+    # Windows NCSI 兜底：明确主机名（更贴近实际探测）
+    - "www.msftconnecttest.com"
+    - "www.msftncsi.com"
+    - "dns.msftncsi.com"
+    # 可选：若你常在 IPv6-only/IPv6 优先网络下遇到 NCSI 异常再加
+    # - "ipv6.msftconnecttest.com"
+    # 关键：Cloudflare Tunnel 必须排除 fake-ip（至少这几项）
+    - "region1.v2.argotunnel.com"
+    - "region2.v2.argotunnel.com"
+    - "us-region1.v2.argotunnel.com"
+    - "us-region2.v2.argotunnel.com"
+    - "*.argotunnel.com"
+    # 保险项（可保留）
+    - "*.cftunnel.com"
+    - "*.cloudflare.com"
+
+    # Stripe 支付（订阅 Plus 需要）
+    - "*.stripe.com"
+    # Sentry 错误上报（可选）
+    - "*.sentry.io"
+    # Google APIs
+    - "+.googleapis.com"
+    # ===============================================================
+    # 3) RTC / NAT 穿透（方案B的核心增强）
+    # ===============================================================
+    # Nintendo Switch NAT 探测：保留这一条即可（覆盖全面且语义清晰）
+    - "+.srv.nintendo.net"
+
+    # PlayStation STUN
+    - "+.stun.playstation.net"
+
+    # Xbox Live / Teredo 相关（敏感服务，过滤更稳）
+    - "xbox.*.microsoft.com"
+    - "+.xboxlive.com"
+
+    # 通用 WebRTC STUN（显式列全，避免不确定通配）
+    - "stun.l.google.com"
+    - "stun1.l.google.com"
+    - "stun2.l.google.com"
+    - "stun3.l.google.com"
+    - "stun4.l.google.com"
+    - "stun.cloudflare.com"
+    - "stun.services.mozilla.com"
+
+    # ===============================================================
+    # 4) 软件兼容性（你已明确需要的本地回环）
+    # ===============================================================
+    - "localhost.ptlogin2.qq.com"
+    - "localhost.sec.qq.com"
+
+    # ===============================================================
+    # 5) NTP 时间同步（少而准，避免误伤）
+    # ===============================================================
+    - "time.windows.com"
+    - "time.apple.com"
+    - "time.cloudflare.com"
+    - "time.nist.gov"
+    - "+.pool.ntp.org"
 tun:
   enable: true
   stack: system
