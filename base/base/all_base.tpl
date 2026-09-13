@@ -1,18 +1,19 @@
 {% if request.target == "clash" or request.target == "clashr" %}
 port: {{ default(global.clash.http_port, "9890") }}
 socks-port: {{ default(global.clash.socks_port, "7891") }}
-mixed-port: 7893       # 混合端口（HTTP+SOCKS），兼容多端
+mixed-port: {{ default(global.clash.mixed_port, "7893") }}       # 混合端口（HTTP+SOCKS），兼容多端
 allow-lan: {{ default(global.clash.allow_lan, "true") }}
 mode: rule
 log-level: {{ default(global.clash.log_level, "info") }}
-external-controller: :9090
-secret: 'HJKD27LS1tkL!'
+# 默认绑回环，仅本机可访问控制面板。若改为对外监听，必须同时在 pref 里设置 clash.secret
+external-controller: {{ default(global.clash.external_controller, "127.0.0.1:9090") }}
+secret: {{ yaml_quote(default(global.clash.secret, "")) }}
 find-process-mode: strict # 进程模式 off / strict / always
 global-client-fingerprint: chrome
 tcp-concurrent: true # TCP 并发 如果域名解析结果对应多个IP,并发请求所有IP,选择握手最快的IP进行通讯
-keep-alive-interval: 30 # TCP Keep Alive 间隔,单位分钟 | 控制 Clash 发出 TCP Keep Alive 包的间隔,减少移动设备耗电问题的临时措施
+keep-alive-interval: 30 # TCP Keep Alive 间隔,单位秒 | 控制 Clash 发出 TCP Keep Alive 包的间隔,减少移动设备耗电问题的临时措施
 # ---- 内核优化参数 ----
-geodata-mode: false
+geodata-mode: true # true=用 geoip.dat(含全球国家码), false=用 mmdb
 geodata-loader: memconservative
 geo-auto-update: true
 geo-update-interval: 48
@@ -20,6 +21,7 @@ geo-update-interval: 48
 geox-url:
   geoip: https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat
   geosite: https://cdn.jsdelivr.net/gh/Jacky-Bruse/v2ray-rules-dat@release/geosite.dat
+  # geodata-mode: true 时用上面的 geoip.dat，本行 mmdb 不生效，仅作切回 false 时的备用
   mmdb: https://cdn.jsdelivr.net/gh/Hackl0us/GeoIP2-CN@release/Country.mmdb
 
 ipv6: true
@@ -29,12 +31,12 @@ profile:
   store-selected: true
   store-fake-ip: true  # ✅ 启用保存 Fake IP，避免重复生成
 
+
 sniffer:
   enable: true
   force-dns-mapping: true
   parse-pure-ip: true
   override-destination: true
-  
   sniff:
     TLS:
       ports: [443, 8443]
@@ -42,11 +44,23 @@ sniffer:
       ports: [80, 8080-8880]
     QUIC:
       ports: [443, 8443]
-  
   force-domain:
     - +.openai.com
     - +.chatgpt.com
     - +.v2ex.com
+    # 建议补上 Google 登录链路关键域名
+    - +.google.com
+    - +.googleapis.com
+    - android.clients.google.com
+    - accounts.google.com
+    - oauth2.googleapis.com
+    - play.googleapis.com
+  # override-destination: true 会用嗅探到的域名覆盖目标，以下长连接/私有协议必须跳过
+  skip-domain:
+    - "+.push.apple.com"       # Apple 推送（APNs），被覆盖会导致推送断连
+    - "Mijia Cloud"            # 米家设备私有协议，官方示例默认项
+    - "dlg.io.mi.com"          # 小米 IoT 长连接
+
 
 dns:
   enable: true
@@ -120,6 +134,7 @@ dns:
 {% endif %}
 
     - "dns.google"
+    # - "geosite:fake-ip-filter"
     # ===============================================================
     # 1) 基础设施与局域网（稳定必留）
     # ===============================================================
@@ -186,6 +201,11 @@ dns:
     - "time.cloudflare.com"
     - "time.nist.gov"
     - "+.pool.ntp.org"
+
+# =========================================================
+# ⚙️ TProxy 透明代理配置（TCP + UDP）
+# =========================================================
+# tproxy-port: 7895
 tun:
   enable: true
   stack: system
@@ -497,7 +517,7 @@ enhanced-mode-by-rule = true
                 "geosite": [
                     "category-ads-all"
                 ],
-                "server": "dns_block",
+                "server": "block",
                 "disable_cache": true
             },
             {
