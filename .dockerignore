@@ -1,0 +1,17 @@
+.git
+.github
+.agents
+.codex
+.idea
+.vscode
+build
+cmake-build-debug
+subconverter.exe
+base/cache
+base/pref.ini
+base/pref.yml
+base/pref.toml
+tmpclaude-*-cwd
+findings.md
+progress.md
+task_plan.md

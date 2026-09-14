@@ -58,11 +58,12 @@ ARG SHA=""
 
 WORKDIR /
 
-# 克隆并编译 subconverter
+# 编译当前构建上下文中的 subconverter
+WORKDIR /subconverter
+COPY . .
+
 RUN set -xe && \
     apk add --no-cache python3 && \
-    git clone https://github.com/Jacky-Bruse/subbehind subconverter --depth=1 && \
-    cd subconverter && \
     if [ -n "$SHA" ]; then sed -i 's/\(v[0-9]\.[0-9]\.[0-9]\)/\1-'"$SHA"'/' src/version.h; fi && \
     python3 -m ensurepip && \
     python3 -m pip install gitpython && \
